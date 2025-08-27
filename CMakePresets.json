@@ -1,0 +1,34 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "dev-build",
+      "displayName": "Development Build",
+      "description": "Development version with automatic Git versioning",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "AUTOUPDATE_PATCH_CNT": "5",
+        "LAST_VERSION_GIT_COMMIT_CNT": "0",
+        "MAJOR_VERSION": "0",
+        "MINOR_VERSION": "0"
+      }
+    },
+    {
+      "name": "release-1.0",
+      "displayName": "Release 1.0.0",
+      "description": "Release version 1.0.0",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "AUTOUPDATE_PATCH_CNT": "5",
+        "LAST_VERSION_GIT_COMMIT_CNT": "0",
+        "MAJOR_VERSION": "1",
+        "MINOR_VERSION": "0"
+      }
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+#pragma once
+
+// Auto-generated version information from Git and CMake Presets
+#define MAJOR_VERSION @MAJOR_VERSION@
+#define MINOR_VERSION @MINOR_VERSION@
+#define PATCH_VERSION @PATCH_VERSION@
+#define TWEAK_VERSION @GIT_COMMIT_COUNT@
+#define HASH_VERSION  "@GIT_SHORT_HASH@"
+
+#define FULL_VERSION "@PROJECT_VERSION_WITH_BUILD@"
