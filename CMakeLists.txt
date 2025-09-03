@@ -1,4 +1,19 @@
-cmake_minimum_required(VERSION 3.10)
+# Copyright (c) Direct Drive Technology Co., Ltd. All rights reserved.
+# Author: Zi Min <jianming.zeng@directdrivetech.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+cmake_minimum_required(VERSION 3.20)
 project(can_ipc_layer)
 
 set(CMAKE_C_STANDARD 11)
@@ -21,6 +36,7 @@ set(MINOR_VERSION_DEFAULT 0)
 set(CMAKE_BUILD_TYPE_DEFAULT "error")
 set(AUTOUPDATE_PATCH_CNT_DEFAULT 5)
 set(LAST_VERSION_GIT_COMMIT_CNT_DEFAULT 0)
+set(COMPILER_OPT_CONF_DEFAULT "O0")
 
 # get VERSION value from CMakePresets.json
 if(DEFINED MAJOR_VERSION)
@@ -51,6 +67,30 @@ if(DEFINED LAST_VERSION_GIT_COMMIT_CNT)
     set(LAST_VERSION_GIT_COMMIT_CNT ${LAST_VERSION_GIT_COMMIT_CNT})
 else()
     set(LAST_VERSION_GIT_COMMIT_CNT ${LAST_VERSION_GIT_COMMIT_CNT_DEFAULT})
+endif()
+
+if(DEFINED COMPILER_OPT_CONF)
+    set(COMPILER_OPT_CONF ${COMPILER_OPT_CONF})
+else()
+    set(COMPILER_OPT_CONF ${COMPILER_OPT_CONF_DEFAULT})
+endif()
+
+# 强制要求使用 preset
+# if(${CMAKE_BUILD_TYPE})
+if(NOT CMAKE_BUILD_TYPE)
+    message(FATAL_ERROR "
+    ============================================================
+    ERROR: CMake preset is mandatory for this project!
+
+    Please configure using one of the available presets:
+
+        cmake .. --preset=dev-build     - Development Build
+        cmake .. --preset=release-1.0   - Release 1.0.0
+
+    To list all available presets:
+        cmake .. --list-presets
+    ============================================================
+    ")
 endif()
 
 # Automatically generate version numbers by obtaining Git information.
@@ -100,6 +140,7 @@ include_directories(${CMAKE_SOURCE_DIR}/generated)
 # find dynamic link library
 list(APPEND CMAKE_LIBRARY_PATH /usr/hobot/lib)
 find_library(HOBOT_CANHAL_LIB hbcanhal)
+find_library(HOBOT_IPCFHAL_LIB hbipcfhal)
 # check if find or not
 if(HOBOT_CANHAL_LIB)
     message(STATUS "Found can_hal library: ${HOBOT_CANHAL_LIB}")
@@ -107,8 +148,22 @@ else()
     message(FATAL_ERROR "can_hal library not found!")
 endif()
 
+if(HOBOT_IPCFHAL_LIB)
+    message(STATUS "Found ipcf_hal library: ${HOBOT_IPCFHAL_LIB}")
+else()
+    message(FATAL_ERROR "ipcf_hal library not found!")
+endif()
+
 find_path(HOBOT_CANHAL_INCLUDE_DIR
-    NAMES hobot/include/canhal/can_hal.h
+    NAMES can_hal.h
+    PATHS /usr/hobot/include/canhal/
+    DOC "Path to Hobot CAN HAL include directory"
+)
+
+find_path(HOBOT_IPCFHAL_INCLUDE_DIR
+    NAMES hb_ipcf_hal.h ipcf_hal_errno.h
+    PATHS /usr/hobot/include/
+    DOC "Path to Hobot IPCF HAL include directory"
 )
 
 # create dll
@@ -138,7 +193,11 @@ target_include_directories(can_ipc_layer
         ${CMAKE_CURRENT_SOURCE_DIR}/src/core
         ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
         ${CMAKE_CURRENT_SOURCE_DIR}/src/api
+        ${HOBOT_CANHAL_INCLUDE_DIR}
+        ${HOBOT_IPCFHAL_INCLUDE_DIR}
 )
+
+add_compile_options(-${COMPILER_OPT_CONF})
 
 target_include_directories(can_ipc_layer PUBLIC include/can_ipc_layer)
 

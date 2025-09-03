@@ -12,6 +12,7 @@
       "description": "Development version with automatic Git versioning",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
+        "COMPILER_OPT_CONF": "O0",
         "AUTOUPDATE_PATCH_CNT": "5",
         "LAST_VERSION_GIT_COMMIT_CNT": "0",
         "MAJOR_VERSION": "0",
@@ -24,6 +25,7 @@
       "description": "Release version 1.0.0",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
+        "COMPILER_OPT_CONF": "O2",
         "AUTOUPDATE_PATCH_CNT": "5",
         "LAST_VERSION_GIT_COMMIT_CNT": "0",
         "MAJOR_VERSION": "1",

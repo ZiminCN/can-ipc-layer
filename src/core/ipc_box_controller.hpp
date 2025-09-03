@@ -16,15 +16,17 @@
 #ifndef __IPC_BOX_CONTROLLER_H__
 #define __IPC_BOX_CONTROLLER_H__
 
-#ifdef __cplusplus
-extern "C"{
-#endif // __cplusplus
+#include <memory>
 
+class IPC_BOX_CONTROLLER
+{
+      public:
+	IPC_BOX_CONTROLLER() = default;
+	~IPC_BOX_CONTROLLER() = default;
+	static std::unique_ptr<IPC_BOX_CONTROLLER> getInstance();
 
-
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+      private:
+	static std::unique_ptr<IPC_BOX_CONTROLLER> Instance;
+};
 
 #endif // __IPC_BOX_CONTROLLER_H__

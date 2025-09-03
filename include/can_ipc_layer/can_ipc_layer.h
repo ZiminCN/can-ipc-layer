@@ -17,11 +17,14 @@
 #define __LIBCAN_IPC_LAYER_H__
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif // __cplusplus
 
+typedef struct can_ipc_layer_handle_t can_ipc_layer_handle_t;
 
-
+// C接口函数
+can_ipc_layer_handle_t *can_ipc_layer_create();
+void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle);
 
 #ifdef __cplusplus
 }

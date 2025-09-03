@@ -13,20 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __CAN_IPC_RECEIVER_HPP__
-#define __CAN_IPC_RECEIVER_HPP__
-#include <iostream>
-#include <memory>
+#include "can_ipc_layer_impl.hpp"
 
-class CAN_IPC_RECIVER
+std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::Instance =
+	std::make_unique<CAN_IPC_LAYER_IMPL>();
+
+std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::getInstance()
 {
-      public:
-	CAN_IPC_RECIVER() = default;
-	~CAN_IPC_RECIVER() = default;
-	std::unique_ptr<CAN_IPC_RECIVER> getInstance();
-
-      private:
-	static std::unique_ptr<CAN_IPC_RECIVER> Instance;
-};
-
-#endif // __CAN_IPC_RECEIVER_HPP__
+	return std::move(CAN_IPC_LAYER_IMPL::Instance);
+}
