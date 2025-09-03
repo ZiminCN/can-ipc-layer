@@ -41,14 +41,14 @@ message(STATUS "构建debug目录: ${CMAKE_BINARY_DIR}")
 if(CMAKE_BUILD_TYPE STREQUAL "Local")
         # 查找Local动态链接库
         # Local是动态库直接在build文件夹下cmake出来的产物，方便调试
-        find_library(TEST_CAN_IPC_LIB test_driver
+        find_library(TEST_CAN_IPC_LIB can_ipc_layer
                 PATHS ${CMAKE_SOURCE_DIR}/../build
                 NO_DEFAULT_PATH
                 REQUIRED
         )
 
         message(STATUS "库文件位置: ${TEST_CAN_IPC_LIB}")
-        add_executable(debug_can_ipc_layer local_main.c)
+        add_executable(debug_can_ipc_layer local_main.cpp)
         # 添加动态库头文件目录
         target_include_directories(debug_can_ipc_layer PRIVATE
                 ${CMAKE_SOURCE_DIR}/../include
