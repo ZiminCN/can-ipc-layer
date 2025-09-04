@@ -16,6 +16,7 @@
 #include "can_ipc_layer.h"
 
 #include "can_ipc_layer_impl.hpp"
+#include "message_log.hpp"
 #include <iostream>
 #include <memory>
 
@@ -30,8 +31,7 @@ struct can_ipc_layer_handle_t {
 
 	~can_ipc_layer_handle_t()
 	{
-		std::cout << "[debug] can_ipc_layer_handle_t impl_last_error is [ "
-			  << impl_last_error << " ]" << std::endl;
+		LOG_DEBUG("can_ipc_layer_handle_t impl_last_error is " << impl_last_error);
 	}
 
 	// 设置错误信息
@@ -52,7 +52,7 @@ extern "C" {
 can_ipc_layer_handle_t *can_ipc_layer_create()
 {
 	try {
-		std::cout << "[Debug] can_ipc_layer_create. " << std::endl;
+		LOG_DEBUG("can_ipc_layer_create.");
 		std::unique_ptr<CAN_IPC_LAYER_IMPL> impl = CAN_IPC_LAYER_IMPL::getInstance();
 		return new can_ipc_layer_handle_t(std::move(impl));
 	} catch (const std::exception &e) {
@@ -67,7 +67,7 @@ void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle)
 	if (handle && *handle) {
 		delete *handle;
 		*handle = nullptr;
-		std::cout << "[Debug] can_ipc_layer_destroy. " << std::endl;
+		LOG_DEBUG("can_ipc_layer_destroy.");
 	}
 }
 

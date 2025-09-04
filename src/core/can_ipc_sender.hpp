@@ -17,16 +17,18 @@
 #define __CAN_IPC_SENDER_HPP__
 #include <iostream>
 #include <memory>
+#include "message_log.hpp"
 
 class CAN_IPC_SENDER
 {
       public:
 	CAN_IPC_SENDER()
 	{
-		std::cout << "[debug] CAN_IPC_SENDER impl init. " << std::endl;
+		LOG_DEBUG("CAN_IPC_SENDER impl init.");
 	};
 	~CAN_IPC_SENDER() = default;
 	static std::unique_ptr<CAN_IPC_SENDER> getInstance();
+	void test_c_can_send_frame_data();
 
       private:
 	static std::unique_ptr<CAN_IPC_SENDER> Instance;

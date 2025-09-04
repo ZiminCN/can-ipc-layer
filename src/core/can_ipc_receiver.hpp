@@ -17,13 +17,14 @@
 #define __CAN_IPC_RECEIVER_HPP__
 #include <iostream>
 #include <memory>
+#include "message_log.hpp"
 
 class CAN_IPC_RECEIVER
 {
       public:
 	CAN_IPC_RECEIVER()
 	{
-		std::cout << "[debug] CAN_IPC_RECEIVER impl init. " << std::endl;
+		LOG_DEBUG("CAN_IPC_RECEIVER impl init.");
 	};
 	~CAN_IPC_RECEIVER() = default;
 	static std::unique_ptr<CAN_IPC_RECEIVER> getInstance();

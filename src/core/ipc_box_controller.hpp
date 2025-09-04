@@ -18,13 +18,14 @@
 
 #include <iostream>
 #include <memory>
+#include "message_log.hpp"
 
 class IPC_BOX_CONTROLLER
 {
       public:
 	IPC_BOX_CONTROLLER()
 	{
-		std::cout << "[debug] IPC_BOX_CONTROLLER impl init. " << std::endl;
+		LOG_DEBUG("IPC_BOX_CONTROLLER impl init.");
 	};
 	~IPC_BOX_CONTROLLER() = default;
 	static std::unique_ptr<IPC_BOX_CONTROLLER> getInstance();

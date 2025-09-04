@@ -37,6 +37,7 @@ set(CMAKE_BUILD_TYPE_DEFAULT "error")
 set(AUTOUPDATE_PATCH_CNT_DEFAULT 5)
 set(LAST_VERSION_GIT_COMMIT_CNT_DEFAULT 0)
 set(COMPILER_OPT_CONF_DEFAULT "O0")
+set(LOG_TYPE_DEFAULT "Debug")
 
 # get VERSION value from CMakePresets.json
 if(DEFINED MAJOR_VERSION)
@@ -92,6 +93,30 @@ if(NOT CMAKE_BUILD_TYPE)
     ============================================================
     ")
 endif()
+
+if(DEFINED LOG_TYPE)
+    set(LOG_TYPE ${LOG_TYPE})
+else()
+    set(LOG_TYPE ${LOG_TYPE_DEFAULT})
+endif()
+
+set(CAN_IPC_LOG_LEVEL 0)
+
+if(LOG_TYPE STREQUAL "None")
+    set(CAN_IPC_LOG_LEVEL 0)
+elseif(LOG_TYPE STREQUAL "Debug")
+    set(CAN_IPC_LOG_LEVEL 1)
+elseif(LOG_TYPE STREQUAL "Info")
+    set(CAN_IPC_LOG_LEVEL 2)
+elseif(LOG_TYPE STREQUAL "WARNING")
+    set(CAN_IPC_LOG_LEVEL 3)
+elseif(LOG_TYPE STREQUAL "ERROR")
+    set(CAN_IPC_LOG_LEVEL 4)
+else()
+    set(CAN_IPC_LOG_LEVEL 0)
+endif()
+
+add_compile_definitions(CAN_IPC_LOG_LEVEL=${CAN_IPC_LOG_LEVEL})
 
 # Automatically generate version numbers by obtaining Git information.
 find_package(Git)
