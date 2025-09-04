@@ -18,15 +18,18 @@
 #include <iostream>
 #include <memory>
 
-class CAN_IPC_RECIVER
+class CAN_IPC_RECEIVER
 {
       public:
-	CAN_IPC_RECIVER() = default;
-	~CAN_IPC_RECIVER() = default;
-	std::unique_ptr<CAN_IPC_RECIVER> getInstance();
+	CAN_IPC_RECEIVER()
+	{
+		std::cout << "[debug] CAN_IPC_RECEIVER impl init. " << std::endl;
+	};
+	~CAN_IPC_RECEIVER() = default;
+	static std::unique_ptr<CAN_IPC_RECEIVER> getInstance();
 
       private:
-	static std::unique_ptr<CAN_IPC_RECIVER> Instance;
+	static std::unique_ptr<CAN_IPC_RECEIVER> Instance;
 };
 
 #endif // __CAN_IPC_RECEIVER_HPP__

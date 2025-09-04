@@ -15,6 +15,9 @@
 
 #ifndef __CAN_IPC_LAYER_IMPL_HPP__
 #define __CAN_IPC_LAYER_IMPL_HPP__
+#include "can_ipc_receiver.hpp"
+#include "can_ipc_sender.hpp"
+#include "ipc_box_controller.hpp"
 #include <iostream>
 #include <memory>
 
@@ -27,6 +30,10 @@ class CAN_IPC_LAYER_IMPL
 
       private:
 	static std::unique_ptr<CAN_IPC_LAYER_IMPL> Instance;
+	std::unique_ptr<CAN_IPC_RECEIVER> can_ipc_receiver_handle = CAN_IPC_RECEIVER::getInstance();
+	std::unique_ptr<CAN_IPC_SENDER> can_ipc_sender_handle = CAN_IPC_SENDER::getInstance();
+	std::unique_ptr<IPC_BOX_CONTROLLER> ipc_box_controller_handle =
+		IPC_BOX_CONTROLLER::getInstance();
 };
 
 #endif // __CAN_IPC_LAYER_IMPL_HPP__

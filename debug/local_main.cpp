@@ -14,12 +14,13 @@
 // limitations under the License.
 
 #include "can_ipc_layer/can_ipc_layer.h"
+
 #include <iostream>
 
 int main()
 {
 	std::cout << "============[debug]=============" << std::endl;
-	can_ipc_layer_handle_t* can_ipc_layer_impl = can_ipc_layer_create();
+	can_ipc_layer_handle_t *can_ipc_layer_impl = can_ipc_layer_create();
 	can_ipc_layer_destroy(&can_ipc_layer_impl);
 	return 0;
 }

@@ -22,10 +22,16 @@
 // 定义不透明句柄的实际内容
 struct can_ipc_layer_handle_t {
 	std::unique_ptr<CAN_IPC_LAYER_IMPL> impl;
-	std::string impl_last_error;
+	std::string impl_last_error = "None";
 
 	can_ipc_layer_handle_t(std::unique_ptr<CAN_IPC_LAYER_IMPL> ptr) : impl(std::move(ptr))
 	{
+	}
+
+	~can_ipc_layer_handle_t()
+	{
+		std::cout << "[debug] can_ipc_layer_handle_t impl_last_error is [ "
+			  << impl_last_error << " ]" << std::endl;
 	}
 
 	// 设置错误信息
@@ -64,4 +70,5 @@ void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle)
 		std::cout << "[Debug] can_ipc_layer_destroy. " << std::endl;
 	}
 }
-}
+
+} // extern "C"

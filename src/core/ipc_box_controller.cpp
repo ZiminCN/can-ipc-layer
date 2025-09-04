@@ -29,3 +29,11 @@
 #include <semaphore.h>
 #include <sys/time.h>
 #include <unistd.h>
+
+std::unique_ptr<IPC_BOX_CONTROLLER> IPC_BOX_CONTROLLER::Instance =
+	std::make_unique<IPC_BOX_CONTROLLER>();
+
+std::unique_ptr<IPC_BOX_CONTROLLER> IPC_BOX_CONTROLLER::getInstance()
+{
+	return std::move(IPC_BOX_CONTROLLER::Instance);
+}

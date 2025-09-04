@@ -21,9 +21,12 @@
 class CAN_IPC_SENDER
 {
       public:
-	CAN_IPC_SENDER() = default;
+	CAN_IPC_SENDER()
+	{
+		std::cout << "[debug] CAN_IPC_SENDER impl init. " << std::endl;
+	};
 	~CAN_IPC_SENDER() = default;
-	std::unique_ptr<CAN_IPC_SENDER> getInstance();
+	static std::unique_ptr<CAN_IPC_SENDER> getInstance();
 
       private:
 	static std::unique_ptr<CAN_IPC_SENDER> Instance;

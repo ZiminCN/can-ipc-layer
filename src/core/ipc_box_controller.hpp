@@ -16,12 +16,16 @@
 #ifndef __IPC_BOX_CONTROLLER_H__
 #define __IPC_BOX_CONTROLLER_H__
 
+#include <iostream>
 #include <memory>
 
 class IPC_BOX_CONTROLLER
 {
       public:
-	IPC_BOX_CONTROLLER() = default;
+	IPC_BOX_CONTROLLER()
+	{
+		std::cout << "[debug] IPC_BOX_CONTROLLER impl init. " << std::endl;
+	};
 	~IPC_BOX_CONTROLLER() = default;
 	static std::unique_ptr<IPC_BOX_CONTROLLER> getInstance();
 

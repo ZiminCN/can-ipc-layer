@@ -13,11 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "can_ipc_reciver.hpp"
+#include "can_ipc_receiver.hpp"
 
-std::unique_ptr<CAN_IPC_RECIVER> CAN_IPC_RECIVER::Instance = std::make_unique<CAN_IPC_RECIVER>();
+std::unique_ptr<CAN_IPC_RECEIVER> CAN_IPC_RECEIVER::Instance = std::make_unique<CAN_IPC_RECEIVER>();
 
-std::unique_ptr<CAN_IPC_RECIVER> CAN_IPC_RECIVER::getInstance()
+std::unique_ptr<CAN_IPC_RECEIVER> CAN_IPC_RECEIVER::getInstance()
 {
-	return std::move(CAN_IPC_RECIVER::Instance);
+	return std::move(CAN_IPC_RECEIVER::Instance);
 }
