@@ -39,6 +39,12 @@ set(LAST_VERSION_GIT_COMMIT_CNT_DEFAULT 0)
 set(COMPILER_OPT_CONF_DEFAULT "O0")
 set(LOG_TYPE_DEFAULT "Debug")
 
+# 只允许特定的构建类型
+set(ALLOWED_BUILD_TYPES Debug Release)
+if(NOT CMAKE_BUILD_TYPE IN_LIST ALLOWED_BUILD_TYPES)
+    message(FATAL_ERROR "不支持的构建类型: ${CMAKE_BUILD_TYPE}。允许的类型: ${ALLOWED_BUILD_TYPES}")
+endif()
+
 # get VERSION value from CMakePresets.json
 if(DEFINED MAJOR_VERSION)
     set(MAJOR_VERSION ${MAJOR_VERSION})
@@ -108,13 +114,15 @@ elseif(LOG_TYPE STREQUAL "Debug")
     set(CAN_IPC_LOG_LEVEL 1)
 elseif(LOG_TYPE STREQUAL "Info")
     set(CAN_IPC_LOG_LEVEL 2)
-elseif(LOG_TYPE STREQUAL "WARNING")
+elseif(LOG_TYPE STREQUAL "Warning")
     set(CAN_IPC_LOG_LEVEL 3)
-elseif(LOG_TYPE STREQUAL "ERROR")
+elseif(LOG_TYPE STREQUAL "Error")
     set(CAN_IPC_LOG_LEVEL 4)
 else()
     set(CAN_IPC_LOG_LEVEL 0)
 endif()
+
+message(STATUS "CAN_IPC_LOG_LEVEL is: ${CAN_IPC_LOG_LEVEL}")
 
 add_compile_definitions(CAN_IPC_LOG_LEVEL=${CAN_IPC_LOG_LEVEL})
 

@@ -14,8 +14,11 @@
 // limitations under the License.
 
 #include "can_ipc_sender.hpp"
-#include <hobot_can_hal.h>
 #include <sys/time.h>
+#include "message_log.hpp"
+#include "hobot_can_hal.h"
+#include <cstring>
+#include <string>
 
 #define MAX_RX_BUF_SIZE 4000
 #define BSWAP_32(x) \
@@ -25,6 +28,11 @@
 	(((uint32_t)(x) & 0x000000ff) << 24) \
 )
 
+typedef struct {
+  char *target;
+  int canid;
+} test_param;
+
 std::unique_ptr<CAN_IPC_SENDER> CAN_IPC_SENDER::Instance = std::make_unique<CAN_IPC_SENDER>();
 
 std::unique_ptr<CAN_IPC_SENDER> CAN_IPC_SENDER::getInstance()
@@ -32,11 +40,47 @@ std::unique_ptr<CAN_IPC_SENDER> CAN_IPC_SENDER::getInstance()
 	return std::move(CAN_IPC_SENDER::Instance);
 }
 
-void CAN_IPC_SENDER::test_c_can_send_frame_data()
+void CAN_IPC_SENDER::test_send_can_frame()
 {
-	// init can api
-	int ret = 0;
-	ret = canInit();
-	if(ret < 0){
+	test_param test_params;
+	uint32_t canid = 5;
+
+	std::string target = "can5_ins0ch4";
+	char ctarget[16];
+	strcpy(ctarget, target.c_str());
+
+	test_params.target = ctarget;
+	test_params.canid = canid;
+
+	//!
+	struct pack_info pack = {
+		.soc_ts = 0,
+		.data_num = 0,
+		.mcu_ts = 0,
+		.length = 0,
+		.unused = 0,
+		.unused_1 = 0,
+	};
+	uint8_t Can_au8Sdu8bytes[64U] = { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xFF };
+	struct canframe frame = {
+		.time_stamp = 0,
+		.canid = BSWAP_32(0x82U),
+		.count = 2,
+		.can_type = 1,
+		.can_channel = static_cast<uint8_t>(test_params.canid),
+		.len = 9,
+		.data = 0,
+	};
+	memset(frame.data, 0x00, sizeof(frame.data));
+	uint32_t frame_num = 1;
+
+	pack.data_num = frame_num;
+	pack.length = pack.data_num;
+	
+	memcpy(frame.data, Can_au8Sdu8bytes, frame.len);
+
+	int ret = canSendMsgFrame(test_params.target, &frame, &pack);
+	if (ret < 0) {
+		LOG_ERROR("canSendMsgFrame failed! ret is [ " << ret << " ]." );
 	}
 }

@@ -13,14 +13,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "can_ipc_layer/can_ipc_layer.h"
-
 #include <iostream>
+#include "can_ipc_layer/can_ipc_layer.h"
 
 int main()
 {
-	std::cout << "============[debug]=============" << std::endl;
-	can_ipc_layer_handle_t *can_ipc_layer_impl = can_ipc_layer_create();
-	can_ipc_layer_destroy(&can_ipc_layer_impl);
-	return 0;
+        std::cout << "Debug Test Start!" << std::endl;
+        can_ipc_layer_handle_t *can_ipc_layer_handle = can_ipc_layer_create();
+        test_can_send(&can_ipc_layer_handle);
+        can_ipc_layer_destroy(&can_ipc_layer_handle);
+        std::cout << "Debug Test End!" << std::endl;
+        return 0;
 }

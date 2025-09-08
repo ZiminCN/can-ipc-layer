@@ -1,5 +1,5 @@
 {
   "io_channels" : {
-    "ipcf" : "./config/ipcf_channel.json"
+    "ipcf" : "./config/ipcf_can_channel.json"
   }
 }

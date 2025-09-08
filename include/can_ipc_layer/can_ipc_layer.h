@@ -20,11 +20,12 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef struct can_ipc_layer_handle_t can_ipc_layer_handle_t;
+typedef struct can_ipc_layer_handle_t* can_ipc_layer_handle;
 
 // C接口函数
-can_ipc_layer_handle_t *can_ipc_layer_create();
-void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle);
+can_ipc_layer_handle can_ipc_layer_create();
+void can_ipc_layer_destroy(can_ipc_layer_handle *handle);
+void test_can_send(can_ipc_layer_handle_t **handle);
 
 #ifdef __cplusplus
 }

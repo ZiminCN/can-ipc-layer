@@ -71,4 +71,11 @@ void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle)
 	}
 }
 
+void test_can_send(can_ipc_layer_handle_t **handle)
+{
+	if (handle && *handle) {
+		(*handle)->impl->lib_test_can_send();
+	}
+}
+
 } // extern "C"

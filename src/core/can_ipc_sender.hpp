@@ -28,7 +28,7 @@ class CAN_IPC_SENDER
 	};
 	~CAN_IPC_SENDER() = default;
 	static std::unique_ptr<CAN_IPC_SENDER> getInstance();
-	void test_c_can_send_frame_data();
+	void test_send_can_frame();
 
       private:
 	static std::unique_ptr<CAN_IPC_SENDER> Instance;

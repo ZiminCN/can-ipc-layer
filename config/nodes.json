@@ -2,24 +2,10 @@
   "nodes" : [
     {
       "id" : 0,
-      "enable" : false,
-      "mode_comment" : "value_table: R, W, RW",
-      "mode" : "R",
-      "target" : "bypass",
-      "clk_source" : "/dev/hrtc0",
-      "io_channel" : {
-        "device_type_comment" : "value_table: can, eth, ipcf, spi",
-        "device_type" : "spi",
-        "channel_id" : 0
-      },
-      "raw_protocol" : "built_0.1"
-    },
-    {
-      "id" : 3,
       "enable" : true,
       "mode_comment" : "value_table: R, W, RW",
       "mode" : "RW",
-      "target" : "bypass",
+      "target" : "can5_ins0ch4",
       "clk_source" : "/dev/hrtc0",
       "io_channel" : {
         "device_type_comment" : "value_table: can, eth, ipcf, spi",

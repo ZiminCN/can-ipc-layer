@@ -5,7 +5,7 @@
     {
       "id" : 0,
       "channel" : {
-        "name" : "bypass",
+        "name" : "can5_ins0ch4",
         "instance": 0,
         "channel": 4,
         "fifo_size": 64000,

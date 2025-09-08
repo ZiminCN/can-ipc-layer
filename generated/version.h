@@ -4,7 +4,7 @@
 #define MAJOR_VERSION 0
 #define MINOR_VERSION 0
 #define PATCH_VERSION 1
-#define TWEAK_VERSION 6
-#define HASH_VERSION  "bae2c12"
+#define TWEAK_VERSION 7
+#define HASH_VERSION  "c621abb"
 
-#define FULL_VERSION "0.0.1.6.bae2c12"
+#define FULL_VERSION "0.0.1.7.c621abb"

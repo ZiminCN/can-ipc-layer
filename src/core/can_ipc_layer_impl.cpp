@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include "can_ipc_layer_impl.hpp"
+#include <hobot_can_hal.h>
 
 std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::Instance =
 	std::make_unique<CAN_IPC_LAYER_IMPL>();
@@ -21,4 +22,24 @@ std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::Instance =
 std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::getInstance()
 {
 	return std::move(CAN_IPC_LAYER_IMPL::Instance);
+}
+
+void CAN_IPC_LAYER_IMPL::init_can_dev()
+{
+	// init can api
+	int ret = 0;
+	ret = canInit();
+	if(ret < 0){
+		LOG_ERROR("canInit error!" << " return value is [" << ret << "].");
+	}
+}
+
+void CAN_IPC_LAYER_IMPL::deinit_can_dev()
+{
+	canDeInit();
+}
+
+void CAN_IPC_LAYER_IMPL::lib_test_can_send()
+{
+	this->can_ipc_sender_handle->test_send_can_frame();
 }
