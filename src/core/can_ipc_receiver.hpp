@@ -15,9 +15,9 @@
 
 #ifndef __CAN_IPC_RECEIVER_HPP__
 #define __CAN_IPC_RECEIVER_HPP__
+#include "message_log.hpp"
 #include <iostream>
 #include <memory>
-#include "message_log.hpp"
 
 class CAN_IPC_RECEIVER
 {

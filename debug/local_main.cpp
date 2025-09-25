@@ -13,15 +13,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <iostream>
 #include "can_ipc_layer/can_ipc_layer.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
 
 int main()
 {
-        std::cout << "Debug Test Start!" << std::endl;
-        can_ipc_layer_handle_t *can_ipc_layer_handle = can_ipc_layer_create();
-        test_can_send(&can_ipc_layer_handle);
-        can_ipc_layer_destroy(&can_ipc_layer_handle);
-        std::cout << "Debug Test End!" << std::endl;
-        return 0;
+	std::cout << "Debug Test Start!" << std::endl;
+	can_ipc_layer_handle_t *can_ipc_layer_handle = can_ipc_layer_create();
+	std::cout << "Test Basic Send Data Func..." << std::endl;
+	test_can_send(&can_ipc_layer_handle);
+
+	std::cout << "Test Send Data Func..." << std::endl;
+	struct can_frame_t tx_frame;
+	tx_frame.id = 0x123;
+	tx_frame.dlc = can_bytes_to_dlc(8);
+	tx_frame.flags = CAN_MODE_FD;
+	memset(tx_frame.data, 0xFF, sizeof(tx_frame.data));
+	can_send(&can_ipc_layer_handle, CAN_PORT_E::CAN_PORT_5, &tx_frame);
+
+	// std::cout << "Test Basic Send Data Func..." << std::endl;
+
+	can_ipc_layer_destroy(&can_ipc_layer_handle);
+	std::cout << "Debug Test End!" << std::endl;
+	return 0;
 }

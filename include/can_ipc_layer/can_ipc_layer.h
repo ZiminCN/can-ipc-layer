@@ -20,11 +20,34 @@
 extern "C" {
 #endif // __cplusplus
 
-typedef struct can_ipc_layer_handle_t* can_ipc_layer_handle;
+#include "can_struct_define.h"
+
+typedef struct can_ipc_layer_handle_t *can_ipc_layer_handle;
 
 // C接口函数
+
+/**
+ * @brief Create a CAN IPC layer handle.
+ * @return A pointer to the created handle, or nullptr on failure.
+ */
 can_ipc_layer_handle can_ipc_layer_create();
-void can_ipc_layer_destroy(can_ipc_layer_handle *handle);
+
+/**
+ * @brief Destroy a CAN IPC layer handle.
+ * @param handle A pointer to the handle to be destroyed.
+ */
+void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle);
+
+/**
+ * @brief Send CAN frame data.
+ * @param handle A pointer to the CAN IPC layer handle.
+ * @param can_port The CAN port to send data on.
+ * @param frame A pointer to the CAN frame data to be sent.
+ * @return 0 on success, negative value on failure.
+ */
+int can_send(can_ipc_layer_handle_t **handle, CAN_PORT_E can_port, can_frame_t *frame);
+
+//! test func
 void test_can_send(can_ipc_layer_handle_t **handle);
 
 #ifdef __cplusplus

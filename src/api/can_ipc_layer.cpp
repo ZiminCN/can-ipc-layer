@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include "can_ipc_layer.h"
+#include "ret_code_def.h"
 
 #include "can_ipc_layer_impl.hpp"
 #include "message_log.hpp"
@@ -71,6 +72,17 @@ void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle)
 	}
 }
 
+int can_send(can_ipc_layer_handle_t **handle, CAN_PORT_E can_port, can_frame_t *frame)
+{
+	if (handle && *handle) {
+		int ret = (*handle)->impl->lib_can_send(can_port, frame);
+		return ret;
+	}
+
+	return -RET_CODE_INVALID_ARG;
+}
+
+//! test func
 void test_can_send(can_ipc_layer_handle_t **handle)
 {
 	if (handle && *handle) {

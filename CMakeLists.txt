@@ -213,7 +213,7 @@ file(GLOB LIB_HEADERS
 )
 
 file(GLOB LIB_INTERFACE_HEADERS
-    "include/can_ipc_layer/*.h"
+    "include/can_ipc_layer/*.h*"
 )
 
 add_library(can_ipc_layer SHARED ${LIB_SOURCES})

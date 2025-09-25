@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include "can_ipc_layer_impl.hpp"
+
 #include <hobot_can_hal.h>
 
 std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::Instance =
@@ -29,8 +30,9 @@ void CAN_IPC_LAYER_IMPL::init_can_dev()
 	// init can api
 	int ret = 0;
 	ret = canInit();
-	if(ret < 0){
-		LOG_ERROR("canInit error!" << " return value is [" << ret << "].");
+	if (ret < 0) {
+		LOG_ERROR("canInit error!"
+			  << " return value is [" << ret << "].");
 	}
 }
 
@@ -42,4 +44,56 @@ void CAN_IPC_LAYER_IMPL::deinit_can_dev()
 void CAN_IPC_LAYER_IMPL::lib_test_can_send()
 {
 	this->can_ipc_sender_handle->test_send_can_frame();
+}
+
+CAN_IPC_CONFIG_T CAN_IPC_LAYER_IMPL::lib_set_can_ipc_handle(CAN_PORT_E can_port)
+{
+	CAN_IPC_CONFIG_T temp_can_ipc_instance_impl;
+	switch (can_port) {
+	case CAN_PORT_E::CAN_PORT_5: {
+		temp_can_ipc_instance_impl.can_port_instance = CAN_IPC_INS0_CAN5_CHAN4;
+		temp_can_ipc_instance_impl.can_dev_port = CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	};
+	case CAN_PORT_E::CAN_PORT_6: {
+		temp_can_ipc_instance_impl.can_port_instance = CAN_IPC_INS0_CAN6_CHAN6;
+		temp_can_ipc_instance_impl.can_dev_port = CAN_DEV_PORT_E::CAN_DEV_PORT_6;
+		break;
+	};
+	case CAN_PORT_E::CAN_PORT_7: {
+		temp_can_ipc_instance_impl.can_port_instance = CAN_IPC_INS0_CAN7_CHAN7;
+		temp_can_ipc_instance_impl.can_dev_port = CAN_DEV_PORT_E::CAN_DEV_PORT_7;
+		break;
+	};
+	case CAN_PORT_E::CAN_PORT_8: {
+		temp_can_ipc_instance_impl.can_port_instance = CAN_IPC_INS0_CAN8_CHAN2;
+		temp_can_ipc_instance_impl.can_dev_port = CAN_DEV_PORT_E::CAN_DEV_PORT_8;
+		break;
+	};
+	case CAN_PORT_E::CAN_PORT_9: {
+		temp_can_ipc_instance_impl.can_port_instance = CAN_IPC_INS0_CAN9_CHAN3;
+		temp_can_ipc_instance_impl.can_dev_port = CAN_DEV_PORT_E::CAN_DEV_PORT_9;
+		break;
+	};
+	// default use CAN Port 5.
+	default: {
+		temp_can_ipc_instance_impl.can_port_instance = CAN_IPC_INS0_CAN5_CHAN4;
+		temp_can_ipc_instance_impl.can_dev_port = CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	};
+	}
+
+	return temp_can_ipc_instance_impl;
+}
+
+int CAN_IPC_LAYER_IMPL::lib_can_send(CAN_PORT_E can_port, can_frame_t *frame)
+{
+	(void)can_port;
+	(void)frame;
+
+	CAN_IPC_CONFIG_T temp_can_ipc_instance_impl = lib_set_can_ipc_handle(can_port);
+
+	int ret = this->can_ipc_sender_handle->send_can_data(&temp_can_ipc_instance_impl, frame);
+
+	return ret;
 }

@@ -15,13 +15,16 @@
 
 #ifndef __CAN_IPC_LAYER_IMPL_HPP__
 #define __CAN_IPC_LAYER_IMPL_HPP__
+#include "can_struct_define.h"
+
 #include "can_ipc_receiver.hpp"
 #include "can_ipc_sender.hpp"
+#include "can_struct_internal_define.hpp"
 #include "ipc_box_controller.hpp"
+#include <atomic>
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <atomic>
 
 // Make sure all instances are completely closed before explicitly closing candev.
 static std::atomic<int> can_dev_ref_count{0};
@@ -30,23 +33,26 @@ static std::mutex can_dev_mutex;
 class CAN_IPC_LAYER_IMPL
 {
       public:
-	CAN_IPC_LAYER_IMPL(){
+	CAN_IPC_LAYER_IMPL()
+	{
 		std::lock_guard<std::mutex> lock(can_dev_mutex);
-		if(can_dev_ref_count++ == 0){
+		if (can_dev_ref_count++ == 0) {
 			this->init_can_dev();
 		}
 	};
-	~CAN_IPC_LAYER_IMPL(){
+	~CAN_IPC_LAYER_IMPL()
+	{
 		std::lock_guard<std::mutex> lock(can_dev_mutex);
-		if(--can_dev_ref_count == 0){
+		if (--can_dev_ref_count == 0) {
 			this->deinit_can_dev();
 		}
 	};
-	CAN_IPC_LAYER_IMPL(const CAN_IPC_LAYER_IMPL&) = delete;
-	CAN_IPC_LAYER_IMPL& operator=(const CAN_IPC_LAYER_IMPL&) = delete;
+	CAN_IPC_LAYER_IMPL(const CAN_IPC_LAYER_IMPL &) = delete;
+	CAN_IPC_LAYER_IMPL &operator=(const CAN_IPC_LAYER_IMPL &) = delete;
 	static std::unique_ptr<CAN_IPC_LAYER_IMPL> getInstance();
 
 	void lib_test_can_send();
+	int lib_can_send(CAN_PORT_E can_port, can_frame_t *frame);
 
       private:
 	static std::unique_ptr<CAN_IPC_LAYER_IMPL> Instance;
@@ -55,8 +61,11 @@ class CAN_IPC_LAYER_IMPL
 	std::unique_ptr<IPC_BOX_CONTROLLER> ipc_box_controller_handle =
 		IPC_BOX_CONTROLLER::getInstance();
 
+	std::unique_ptr<CAN_IPC_CONFIG_T> can_ipc_config = std::make_unique<CAN_IPC_CONFIG_T>();
 	void init_can_dev();
 	void deinit_can_dev();
+
+	CAN_IPC_CONFIG_T lib_set_can_ipc_handle(CAN_PORT_E can_port);
 };
 
 #endif // __CAN_IPC_LAYER_IMPL_HPP__

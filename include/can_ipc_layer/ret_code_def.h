@@ -13,25 +13,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __IPC_BOX_CONTROLLER_H__
-#define __IPC_BOX_CONTROLLER_H__
+#pragma once
+#ifndef __RET_CODE_DEF_H__
+#define __RET_CODE_DEF_H__
 
-#include "message_log.hpp"
-#include <iostream>
-#include <memory>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class IPC_BOX_CONTROLLER
-{
-      public:
-	IPC_BOX_CONTROLLER()
-	{
-		LOG_DEBUG("IPC_BOX_CONTROLLER impl init.");
-	};
-	~IPC_BOX_CONTROLLER() = default;
-	static std::unique_ptr<IPC_BOX_CONTROLLER> getInstance();
+/** @defgroup RET_CODE_DEF Return Code Definition
+ * @{
+ */
+#define RET_CODE_SUCCESS     0
+#define RET_CODE_ERROR	     1
+#define RET_CODE_NOT_INITED  2
+#define RET_CODE_TIMEOUT     3
+#define RET_CODE_INVALID_ARG 4
+/**
+ * @{
+ */
 
-      private:
-	static std::unique_ptr<IPC_BOX_CONTROLLER> Instance;
-};
+#ifdef __cplusplus
+}
+#endif
 
-#endif // __IPC_BOX_CONTROLLER_H__
+#endif // __RET_CODE_DEF_H__

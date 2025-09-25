@@ -15,9 +15,14 @@
 
 #ifndef __CAN_IPC_SENDER_HPP__
 #define __CAN_IPC_SENDER_HPP__
+#include "can_struct_define.h"
+
+#include "can_struct_internal_define.hpp"
+#include "message_log.hpp"
+#include <cstring>
 #include <iostream>
 #include <memory>
-#include "message_log.hpp"
+#include <string>
 
 class CAN_IPC_SENDER
 {
@@ -29,6 +34,7 @@ class CAN_IPC_SENDER
 	~CAN_IPC_SENDER() = default;
 	static std::unique_ptr<CAN_IPC_SENDER> getInstance();
 	void test_send_can_frame();
+	int send_can_data(CAN_IPC_CONFIG_T *can_ipc_config, can_frame_t *frame);
 
       private:
 	static std::unique_ptr<CAN_IPC_SENDER> Instance;
