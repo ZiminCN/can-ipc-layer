@@ -72,10 +72,32 @@ void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle)
 	}
 }
 
-int can_send(can_ipc_layer_handle_t **handle, CAN_PORT_E can_port, can_frame_t *frame)
+int can_send(can_ipc_layer_handle_t **handle, const CAN_PORT_E can_port, const can_frame_t *frame)
 {
 	if (handle && *handle) {
-		int ret = (*handle)->impl->lib_can_send(can_port, frame);
+		int ret = (*handle)->impl->lib_can_send(can_port, *frame);
+		return ret;
+	}
+
+	return -RET_CODE_INVALID_ARG;
+}
+
+int can_add_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_filter,
+		   const can_rx_callback_t can_rx_callback)
+{
+	if (handle && *handle) {
+		int ret =
+			(*handle)->impl->lib_can_register_can_filter(*can_filter, can_rx_callback);
+		return ret;
+	}
+
+	return -RET_CODE_INVALID_ARG;
+}
+
+int can_remove_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_filter)
+{
+	if (handle && *handle) {
+		int ret = (*handle)->impl->lib_can_deregister_can_filter(*can_filter);
 		return ret;
 	}
 

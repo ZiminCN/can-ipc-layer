@@ -97,7 +97,7 @@ typedef struct {
  */
 
 // single can frame send function
-int CAN_IPC_SENDER::send_can_data(CAN_IPC_CONFIG_T *can_ipc_config, can_frame_t *frame)
+int CAN_IPC_SENDER::send_can_data(CAN_IPC_CONFIG_T *can_ipc_config, const can_frame_t &frame)
 {
 	(void)can_ipc_config;
 	(void)frame;
@@ -125,17 +125,17 @@ int CAN_IPC_SENDER::send_can_data(CAN_IPC_CONFIG_T *can_ipc_config, can_frame_t 
 				std::chrono::steady_clock::now().time_since_epoch())
 				.count()),
 		// byte order reversal
-		.canid = BSWAP_32(static_cast<uint32_t>(frame->id)),
+		.canid = BSWAP_32(static_cast<uint32_t>(frame.id)),
 		// i dont know what is count, so just set it to 1, you can refer to
 		// /usr/hobot/include/canhal/hobot_can_hal.h
 		.count = 1,
 		// CANType_Can = 0, CANType_Canfd = 1
-		.can_type = frame->flags,
+		.can_type = frame.flags,
 		.can_channel = static_cast<uint8_t>(can_ipc_config->can_dev_port),
-		.len = can_dlc_to_bytes(frame->dlc),
+		.len = can_dlc_to_bytes(frame.dlc),
 		.data = 0,
 	};
-	memcpy(tx_frame.data, frame->data, can_dlc_to_bytes(frame->dlc));
+	memcpy(tx_frame.data, frame.data, can_dlc_to_bytes(frame.dlc));
 
 	int ret = canSendMsgFrame(can_port_target.target_instance, &tx_frame, &pack);
 

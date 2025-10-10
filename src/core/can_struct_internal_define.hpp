@@ -16,7 +16,7 @@
 #pragma once
 #ifndef __CAN_STRUCT_INTERNAL_DEFINE_HPP__
 #define __CAN_STRUCT_INTERNAL_DEFINE_HPP__
-
+#include <string>
 /** @defgroup CAN_IPC_INS0_CANX_CHANX CAN IPC channel name
  * @{
  */

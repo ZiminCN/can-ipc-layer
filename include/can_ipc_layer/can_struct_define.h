@@ -148,17 +148,16 @@ struct can_filter_t {
 	 * of the corresponding bit in the ``id`` field is ignored by the filter.
 	 */
 	uint32_t mask;
-	/** Flags. @see @ref CAN_FILTER_FLAGS. */
-	uint8_t flags;
+	/** CAN port. */
+	CAN_PORT_E can_port;
 };
 
 /**
  * @brief Defines the application callback handler function signature for receiving.
  *
- * @param dev       Pointer to the device structure for the driver instance.
  * @param frame     Received frame.
  * @param user_data User data provided when the filter was added.
  */
-typedef void (*can_rx_callback_t)(CAN_PORT_E can_port, struct can_frame_t *frame, void *user_data);
+typedef void (*can_rx_callback_t)(struct can_frame_t *frame, void *user_data);
 
 #endif // __CAN_STRUCT_DEFINE_HPP__

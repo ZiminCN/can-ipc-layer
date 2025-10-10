@@ -52,7 +52,10 @@ class CAN_IPC_LAYER_IMPL
 	static std::unique_ptr<CAN_IPC_LAYER_IMPL> getInstance();
 
 	void lib_test_can_send();
-	int lib_can_send(CAN_PORT_E can_port, can_frame_t *frame);
+	int lib_can_send(const CAN_PORT_E can_port, const can_frame_t &frame);
+	int lib_can_register_can_filter(const can_filter_t &can_filter,
+					const can_rx_callback_t &can_rx_callback);
+	int lib_can_deregister_can_filter(const can_filter_t &can_filter);
 
       private:
 	static std::unique_ptr<CAN_IPC_LAYER_IMPL> Instance;

@@ -22,16 +22,16 @@
 #include <sstream>
 // 从编译定义中获取日志级别
 #ifndef CAN_IPC_LOG_LEVEL
-#define CAN_IPC_LOG_LEVEL 1
+#define CAN_IPC_LOG_LEVEL 0 // 不要修改这里，修改LOG等级需要在CMake里修改CAN_IPC_LOG_LEVEL参数
 #endif
 
 // 日志级别枚举
 enum CANIPCLogLevel {
-	CAN_IPC_LOG_NONE = 0,	 // 调试信息
-	CAN_IPC_LOG_DEBUG = 1,	 // 调试信息
-	CAN_IPC_LOG_INFO = 2,	 // 一般信息
-	CAN_IPC_LOG_WARNING = 3, // 警告信息
-	CAN_IPC_LOG_ERROR = 4	 // 错误信息
+	CAN_IPC_LOG_NONE = 0,	 // 默认缺省
+	CAN_IPC_LOG_DEBUG = 1,	 // 输出调试信息及以上
+	CAN_IPC_LOG_INFO = 2,	 // 输出一般信息及以上
+	CAN_IPC_LOG_WARNING = 3, // 输出警告信息以及上
+	CAN_IPC_LOG_ERROR = 4	 // 输出错误信息
 };
 
 constexpr CANIPCLogLevel CURRENT_IPC_LOG_LEVEL = static_cast<CANIPCLogLevel>(CAN_IPC_LOG_LEVEL);

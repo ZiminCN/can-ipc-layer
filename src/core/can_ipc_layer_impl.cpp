@@ -46,7 +46,7 @@ void CAN_IPC_LAYER_IMPL::lib_test_can_send()
 	this->can_ipc_sender_handle->test_send_can_frame();
 }
 
-CAN_IPC_CONFIG_T CAN_IPC_LAYER_IMPL::lib_set_can_ipc_handle(CAN_PORT_E can_port)
+CAN_IPC_CONFIG_T CAN_IPC_LAYER_IMPL::lib_set_can_ipc_handle(const CAN_PORT_E can_port)
 {
 	CAN_IPC_CONFIG_T temp_can_ipc_instance_impl;
 	switch (can_port) {
@@ -86,7 +86,7 @@ CAN_IPC_CONFIG_T CAN_IPC_LAYER_IMPL::lib_set_can_ipc_handle(CAN_PORT_E can_port)
 	return temp_can_ipc_instance_impl;
 }
 
-int CAN_IPC_LAYER_IMPL::lib_can_send(CAN_PORT_E can_port, can_frame_t *frame)
+int CAN_IPC_LAYER_IMPL::lib_can_send(const CAN_PORT_E can_port, const can_frame_t &frame)
 {
 	(void)can_port;
 	(void)frame;
@@ -96,4 +96,30 @@ int CAN_IPC_LAYER_IMPL::lib_can_send(CAN_PORT_E can_port, can_frame_t *frame)
 	int ret = this->can_ipc_sender_handle->send_can_data(&temp_can_ipc_instance_impl, frame);
 
 	return ret;
+}
+
+int CAN_IPC_LAYER_IMPL::lib_can_register_can_filter(const can_filter_t &can_filter,
+						    const can_rx_callback_t &can_rx_callback)
+{
+	(void)can_filter;
+	(void)can_rx_callback;
+
+	CAN_IPC_RECEIVER_FILTER_T can_ipc_receiver_filter = {
+		.can_filter_id = can_filter.id,
+		.can_filter_mask = can_filter.mask,
+		.can_filter_callback = can_rx_callback,
+	};
+	return this->can_ipc_receiver_handle->register_can_filter(can_ipc_receiver_filter);
+}
+
+int CAN_IPC_LAYER_IMPL::lib_can_deregister_can_filter(const can_filter_t &can_filter)
+{
+	(void)can_filter;
+
+	CAN_IPC_RECEIVER_FILTER_T can_ipc_receiver_filter = {
+		.can_filter_id = can_filter.id,
+		.can_filter_mask = can_filter.mask,
+		.can_filter_callback = NULL,
+	};
+	return this->can_ipc_receiver_handle->deregister_can_filter(can_ipc_receiver_filter);
 }
