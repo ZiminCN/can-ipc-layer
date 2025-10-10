@@ -46,6 +46,39 @@ void CAN_IPC_LAYER_IMPL::lib_test_can_send()
 	this->can_ipc_sender_handle->test_send_can_frame();
 }
 
+CAN_DEV_PORT_E CAN_IPC_LAYER_IMPL::lib_get_can_dev_port(const CAN_PORT_E can_port)
+{
+	switch(can_port){
+		case CAN_PORT_E::CAN_PORT_5:{
+			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+			break;
+		}
+		case CAN_PORT_E::CAN_PORT_6:{
+			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+			break;
+		}
+		case CAN_PORT_E::CAN_PORT_7:{
+			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+			break;
+		}
+		case CAN_PORT_E::CAN_PORT_8:{
+			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+			break;
+		}
+		case CAN_PORT_E::CAN_PORT_9:{
+			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+			break;
+		}
+		default:{
+			LOG_WARNING("Invalid CAN Port, use CAN Port 5 as default.");
+			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+			break;
+		}
+	}
+
+	return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+}
+
 CAN_IPC_CONFIG_T CAN_IPC_LAYER_IMPL::lib_set_can_ipc_handle(const CAN_PORT_E can_port)
 {
 	CAN_IPC_CONFIG_T temp_can_ipc_instance_impl;
@@ -104,9 +137,10 @@ int CAN_IPC_LAYER_IMPL::lib_can_register_can_filter(const can_filter_t &can_filt
 	(void)can_filter;
 	(void)can_rx_callback;
 
-	CAN_IPC_RECEIVER_FILTER_T can_ipc_receiver_filter = {
+	CAN_IPC_FILTER_T can_ipc_receiver_filter = {
 		.can_filter_id = can_filter.id,
 		.can_filter_mask = can_filter.mask,
+		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
 		.can_filter_callback = can_rx_callback,
 	};
 	return this->can_ipc_receiver_handle->register_can_filter(can_ipc_receiver_filter);
@@ -116,9 +150,10 @@ int CAN_IPC_LAYER_IMPL::lib_can_deregister_can_filter(const can_filter_t &can_fi
 {
 	(void)can_filter;
 
-	CAN_IPC_RECEIVER_FILTER_T can_ipc_receiver_filter = {
+	CAN_IPC_FILTER_T can_ipc_receiver_filter = {
 		.can_filter_id = can_filter.id,
 		.can_filter_mask = can_filter.mask,
+		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
 		.can_filter_callback = NULL,
 	};
 	return this->can_ipc_receiver_handle->deregister_can_filter(can_ipc_receiver_filter);

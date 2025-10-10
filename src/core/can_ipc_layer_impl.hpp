@@ -67,6 +67,7 @@ class CAN_IPC_LAYER_IMPL
 	std::unique_ptr<CAN_IPC_CONFIG_T> can_ipc_config = std::make_unique<CAN_IPC_CONFIG_T>();
 	void init_can_dev();
 	void deinit_can_dev();
+	CAN_DEV_PORT_E lib_get_can_dev_port(const CAN_PORT_E can_port);
 
 	CAN_IPC_CONFIG_T lib_set_can_ipc_handle(CAN_PORT_E can_port);
 };

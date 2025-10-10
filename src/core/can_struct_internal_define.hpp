@@ -36,13 +36,13 @@
 /** @defgroup CAN_DEV_PORT_E CAN DEV Port Enumeration
  * @{
  */
-typedef enum {
+enum class CAN_DEV_PORT_E {
 	CAN_DEV_PORT_5 = 5,
 	CAN_DEV_PORT_6 = 6,
 	CAN_DEV_PORT_7 = 7,
 	CAN_DEV_PORT_8 = 8,
 	CAN_DEV_PORT_9 = 9,
-} CAN_DEV_PORT_E;
+};
 /**
  * @}
  */
