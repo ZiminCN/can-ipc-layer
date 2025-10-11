@@ -31,13 +31,6 @@ typedef struct {
 	int canid;
 } test_param;
 
-std::unique_ptr<CAN_IPC_SENDER> CAN_IPC_SENDER::Instance = std::make_unique<CAN_IPC_SENDER>();
-
-std::unique_ptr<CAN_IPC_SENDER> CAN_IPC_SENDER::getInstance()
-{
-	return std::move(CAN_IPC_SENDER::Instance);
-}
-
 void CAN_IPC_SENDER::test_send_can_frame()
 {
 	test_param test_params;

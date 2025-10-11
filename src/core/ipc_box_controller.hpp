@@ -28,10 +28,14 @@ class IPC_BOX_CONTROLLER
 		LOG_DEBUG("IPC_BOX_CONTROLLER impl init.");
 	};
 	~IPC_BOX_CONTROLLER() = default;
-	static std::unique_ptr<IPC_BOX_CONTROLLER> getInstance();
+	static std::unique_ptr<IPC_BOX_CONTROLLER> &getInstance()
+	{
+		static std::unique_ptr<IPC_BOX_CONTROLLER> Instance =
+			std::make_unique<IPC_BOX_CONTROLLER>();
+		return Instance;
+	};
 
       private:
-	static std::unique_ptr<IPC_BOX_CONTROLLER> Instance;
 };
 
 #endif // __IPC_BOX_CONTROLLER_H__

@@ -48,32 +48,32 @@ void CAN_IPC_LAYER_IMPL::lib_test_can_send()
 
 CAN_DEV_PORT_E CAN_IPC_LAYER_IMPL::lib_get_can_dev_port(const CAN_PORT_E can_port)
 {
-	switch(can_port){
-		case CAN_PORT_E::CAN_PORT_5:{
-			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
-			break;
-		}
-		case CAN_PORT_E::CAN_PORT_6:{
-			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
-			break;
-		}
-		case CAN_PORT_E::CAN_PORT_7:{
-			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
-			break;
-		}
-		case CAN_PORT_E::CAN_PORT_8:{
-			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
-			break;
-		}
-		case CAN_PORT_E::CAN_PORT_9:{
-			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
-			break;
-		}
-		default:{
-			LOG_WARNING("Invalid CAN Port, use CAN Port 5 as default.");
-			return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
-			break;
-		}
+	switch (can_port) {
+	case CAN_PORT_E::CAN_PORT_5: {
+		return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	}
+	case CAN_PORT_E::CAN_PORT_6: {
+		return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	}
+	case CAN_PORT_E::CAN_PORT_7: {
+		return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	}
+	case CAN_PORT_E::CAN_PORT_8: {
+		return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	}
+	case CAN_PORT_E::CAN_PORT_9: {
+		return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	}
+	default: {
+		LOG_WARNING("Invalid CAN Port, use CAN Port 5 as default.");
+		return CAN_DEV_PORT_E::CAN_DEV_PORT_5;
+		break;
+	}
 	}
 
 	return CAN_DEV_PORT_E::CAN_DEV_PORT_5;

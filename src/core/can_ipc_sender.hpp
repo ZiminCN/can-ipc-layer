@@ -32,12 +32,18 @@ class CAN_IPC_SENDER
 		LOG_DEBUG("CAN_IPC_SENDER impl init.");
 	};
 	~CAN_IPC_SENDER() = default;
-	static std::unique_ptr<CAN_IPC_SENDER> getInstance();
+	CAN_IPC_SENDER(const CAN_IPC_SENDER &) = delete;
+	CAN_IPC_SENDER &operator=(const CAN_IPC_SENDER &) = delete;
+	static std::unique_ptr<CAN_IPC_SENDER> &getInstance()
+	{
+		static std::unique_ptr<CAN_IPC_SENDER> Instance =
+			std::make_unique<CAN_IPC_SENDER>();
+		return Instance;
+	};
 	void test_send_can_frame();
 	int send_can_data(CAN_IPC_CONFIG_T *can_ipc_config, const can_frame_t &frame);
 
       private:
-	static std::unique_ptr<CAN_IPC_SENDER> Instance;
 };
 
 #endif // __CAN_IPC_SENDER_HPP__

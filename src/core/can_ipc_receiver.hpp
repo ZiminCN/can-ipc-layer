@@ -16,9 +16,10 @@
 #ifndef __CAN_IPC_RECEIVER_HPP__
 #define __CAN_IPC_RECEIVER_HPP__
 #include "can_struct_define.h"
-#include "can_struct_internal_define.hpp"
 
+#include "can_struct_internal_define.hpp"
 #include "message_log.hpp"
+#include "work_queue.hpp"
 #include <cstdint>
 #include <functional>
 #include <iostream>
@@ -47,7 +48,7 @@ typedef struct {
 	std::unordered_map<uint32_t, int> can_ipc_filter_mask_map;
 	std::unordered_map<uint32_t, int> can_ipc_filter_id_map;
 	std::unordered_map<uint32_t, CAN_IPC_FILTER_T> can_ipc_filter_map;
-}CAN_IPC_RECEIVER_FILTER_T;
+} CAN_IPC_RECEIVER_FILTER_T;
 
 class CAN_IPC_RECEIVER
 {
@@ -58,47 +59,58 @@ class CAN_IPC_RECEIVER
 		this->init_can_filter();
 	};
 	~CAN_IPC_RECEIVER() = default;
-	static std::unique_ptr<CAN_IPC_RECEIVER> getInstance();
+	CAN_IPC_RECEIVER(const CAN_IPC_RECEIVER &) = delete;
+	CAN_IPC_RECEIVER &operator=(const CAN_IPC_RECEIVER &) = delete;
+	static std::unique_ptr<CAN_IPC_RECEIVER> &getInstance()
+	{
+		static std::unique_ptr<CAN_IPC_RECEIVER> Instance =
+			std::make_unique<CAN_IPC_RECEIVER>();
+		return Instance;
+	};
 	int register_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter);
 	int deregister_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter);
 
       private:
-	static std::unique_ptr<CAN_IPC_RECEIVER> Instance;
-	// static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> can_ipc_receiver_port_5_filter;
-	// static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> can_ipc_receiver_port_6_filter;
-	// static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> can_ipc_receiver_port_7_filter;
-	// static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> can_ipc_receiver_port_8_filter;
-	// static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> can_ipc_receiver_port_9_filter;
-
-	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T>& get_can_ipc_receiver_port_5_filter(){
-		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance = std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
+	std::unique_ptr<WORK_QUEUE> &work_queue_handle = WORK_QUEUE::getInstance();
+	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> &get_can_ipc_receiver_port_5_filter()
+	{
+		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance =
+			std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
 		return instance;
 	}
 
-	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T>& get_can_ipc_receiver_port_6_filter(){
-		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance = std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
+	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> &get_can_ipc_receiver_port_6_filter()
+	{
+		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance =
+			std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
 		return instance;
 	}
 
-	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T>& get_can_ipc_receiver_port_7_filter(){
-		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance = std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
+	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> &get_can_ipc_receiver_port_7_filter()
+	{
+		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance =
+			std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
 		return instance;
 	}
 
-	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T>& get_can_ipc_receiver_port_8_filter(){
-		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance = std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
+	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> &get_can_ipc_receiver_port_8_filter()
+	{
+		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance =
+			std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
 		return instance;
 	}
 
-	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T>& get_can_ipc_receiver_port_9_filter(){
-		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance = std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
+	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> &get_can_ipc_receiver_port_9_filter()
+	{
+		static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> instance =
+			std::make_unique<CAN_IPC_RECEIVER_FILTER_T>();
 		return instance;
 	}
 
 	void init_can_filter();
-	void clear_hash_table(CAN_IPC_RECEIVER_FILTER_T& can_ipc_receiver_filter);
+	void clear_hash_table(CAN_IPC_RECEIVER_FILTER_T &can_ipc_receiver_filter);
 	int match_can_filter(uint32_t can_port, uint32_t raw_can_id);
-	CAN_IPC_RECEIVER_FILTER_T* return_can_ipc_receiver_filter(const CAN_DEV_PORT_E can_port);
+	CAN_IPC_RECEIVER_FILTER_T *return_can_ipc_receiver_filter(const CAN_DEV_PORT_E can_port);
 };
 
 #endif // __CAN_IPC_RECEIVER_HPP__

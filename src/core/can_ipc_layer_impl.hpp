@@ -28,21 +28,20 @@
 
 // Make sure all instances are completely closed before explicitly closing candev.
 static std::atomic<int> can_dev_ref_count{0};
-static std::mutex can_dev_mutex;
 
 class CAN_IPC_LAYER_IMPL
 {
       public:
 	CAN_IPC_LAYER_IMPL()
 	{
-		std::lock_guard<std::mutex> lock(can_dev_mutex);
+		std::lock_guard<std::mutex> lock(this->can_dev_mutex);
 		if (can_dev_ref_count++ == 0) {
 			this->init_can_dev();
 		}
 	};
 	~CAN_IPC_LAYER_IMPL()
 	{
-		std::lock_guard<std::mutex> lock(can_dev_mutex);
+		std::lock_guard<std::mutex> lock(this->can_dev_mutex);
 		if (--can_dev_ref_count == 0) {
 			this->deinit_can_dev();
 		}
@@ -59,9 +58,11 @@ class CAN_IPC_LAYER_IMPL
 
       private:
 	static std::unique_ptr<CAN_IPC_LAYER_IMPL> Instance;
-	std::unique_ptr<CAN_IPC_RECEIVER> can_ipc_receiver_handle = CAN_IPC_RECEIVER::getInstance();
-	std::unique_ptr<CAN_IPC_SENDER> can_ipc_sender_handle = CAN_IPC_SENDER::getInstance();
-	std::unique_ptr<IPC_BOX_CONTROLLER> ipc_box_controller_handle =
+	static std::mutex can_dev_mutex;
+	std::unique_ptr<CAN_IPC_RECEIVER> &can_ipc_receiver_handle =
+		CAN_IPC_RECEIVER::getInstance();
+	std::unique_ptr<CAN_IPC_SENDER> &can_ipc_sender_handle = CAN_IPC_SENDER::getInstance();
+	std::unique_ptr<IPC_BOX_CONTROLLER> &ipc_box_controller_handle =
 		IPC_BOX_CONTROLLER::getInstance();
 
 	std::unique_ptr<CAN_IPC_CONFIG_T> can_ipc_config = std::make_unique<CAN_IPC_CONFIG_T>();
