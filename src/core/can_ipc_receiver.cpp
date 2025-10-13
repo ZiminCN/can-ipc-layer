@@ -14,7 +14,12 @@
 // limitations under the License.
 
 #include "can_ipc_receiver.hpp"
+#include "hobot_can_hal.h"
 #include "ret_code_def.h"
+
+#include <cstdlib>
+#include <cstring>
+#include <memory>
 
 // NOTE[x]: [Core] Hash table(message info; callback info;)
 // NOTE[]: [Core] message receive filter task(blockade)
@@ -88,6 +93,12 @@ int CAN_IPC_RECEIVER::register_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter
 	// of the CAN ID 3: [can_ipc_filter_mask_map] emplace the CAN MASK, if return error,
 	// increase the count value of the CAN MASK
 
+	if (this->receive_ipc_can_task_running_.load()) {
+		LOG_WARNING("Please register can filter before start can ipc receiver or pause can "
+			    "ipc receiver.");
+		return -RET_CODE_INVALID_ARG;
+	}
+
 	CAN_IPC_RECEIVER_FILTER_T *can_ipc_receiver_filter = this->return_can_ipc_receiver_filter(
 		static_cast<CAN_DEV_PORT_E>(can_ipc_filter.can_port));
 	if (can_ipc_receiver_filter == nullptr) {
@@ -140,6 +151,12 @@ int CAN_IPC_RECEIVER::deregister_can_filter(const CAN_IPC_FILTER_T &can_ipc_filt
 	// 3: [can_ipc_filter_map] Based on the count of the obtained CAN ID, if the count of the
 	// CAN ID is 0, erase this filter.
 
+	if (this->receive_ipc_can_task_running_.load()) {
+		LOG_WARNING("Please register can filter before start can ipc receiver or pause can "
+			    "ipc receiver.");
+		return -RET_CODE_INVALID_ARG;
+	}
+
 	CAN_IPC_RECEIVER_FILTER_T *can_ipc_receiver_filter = this->return_can_ipc_receiver_filter(
 		static_cast<CAN_DEV_PORT_E>(can_ipc_filter.can_port));
 	if (can_ipc_receiver_filter == nullptr) {
@@ -187,22 +204,271 @@ int CAN_IPC_RECEIVER::deregister_can_filter(const CAN_IPC_FILTER_T &can_ipc_filt
 	return RET_CODE_SUCCESS;
 }
 
-int CAN_IPC_RECEIVER::match_can_filter(uint32_t can_port, uint32_t raw_can_id)
+int CAN_IPC_RECEIVER::match_can_filter(CAN_DEV_PORT_E can_port,
+				       const struct can_frame_t raw_can_frame)
 {
-	(void)can_port;
-	(void)raw_can_id;
-	// 1: raw_can_id & all CAN MASK to match the CAN ID.
+	// 1: raw_can_frame.id & all CAN MASK to match the CAN ID.
 	// 2: if matched, add the corresponding filter's callback function to the work queue.
 
-	// uint32_t match_can_id = 0x00U;
+	uint32_t match_can_id = 0x00U;
 
-	// for (auto &pair : can_ipc_filter_mask_map) {
-	// 	match_can_id = (raw_can_id) & (pair.first);
-	// 	auto it = can_ipc_filter_map.find(match_can_id);
-	// 	if (it != can_ipc_filter_map.end()) {
-	// 		// add work queue
-	// 	}
-	// }
+	CAN_IPC_RECEIVER_FILTER_T *can_ipc_receiver_filter =
+		this->return_can_ipc_receiver_filter(static_cast<CAN_DEV_PORT_E>(can_port));
+	if (can_ipc_receiver_filter == nullptr) {
+		return -RET_CODE_INVALID_ARG;
+	}
+
+	for (auto &pair : can_ipc_receiver_filter->can_ipc_filter_mask_map) {
+		match_can_id = (raw_can_frame.id) & (pair.first);
+		auto it = can_ipc_receiver_filter->can_ipc_filter_map.find(match_can_id);
+		if (it != can_ipc_receiver_filter->can_ipc_filter_map.end()) {
+			// add work queue
+			CAN_IPC_FILTER_T &filter = it->second;
+
+			std::function<void()> cb_func = [filter, raw_can_frame]() {
+				can_frame_t cb_frame = raw_can_frame;
+				filter.can_filter_callback(&cb_frame, filter.user_data);
+			};
+
+			this->work_queue_handle->enqueue(cb_func);
+		}
+	}
 
 	return RET_CODE_SUCCESS;
+}
+
+void CAN_IPC_RECEIVER::get_raw_can_data(const can_port_target_t &can_port_target,
+					std::unique_ptr<canframe> &rx_frame)
+{
+	struct pack_info pack = {
+		.soc_ts = 0,
+		.data_num = 0,
+		.mcu_ts = 0,
+		.length = sizeof(struct canframe),
+		.unused = 0,
+		.unused_1 = 0,
+	};
+
+	canRecvMsgFrame(can_port_target.target_instance, rx_frame.get(), &pack);
+
+	struct can_frame_t can_frame = {
+		.id = rx_frame->canid,
+		.dlc = can_bytes_to_dlc(rx_frame->len),
+		.flags = rx_frame->can_type,
+		.data = 0,
+	};
+
+	memcpy(can_frame.data, rx_frame->data, sizeof(rx_frame->len));
+
+	this->match_can_filter(static_cast<CAN_DEV_PORT_E>(can_port_target.can_port_index),
+			       can_frame);
+}
+
+void CAN_IPC_RECEIVER::work_queue_task()
+{
+	while (this->work_task_queue_running_.load()) {
+		// set the scope for the mutex lock
+		{
+			std::unique_lock<std::mutex> lock(this->work_task_queue_paused_mutex_);
+			this->work_task_queue_paused_condition_.wait(lock, [this]() {
+				// if task paused, blocking task.
+				return (!this->work_task_queue_paused_);
+			});
+		}
+
+		std::function<void()> task = this->work_queue_handle->dequeue_blocking();
+
+		if (this->work_task_queue_running_.load() && task) {
+			try {
+				task();
+			} catch (const std::exception &e) {
+				LOG_ERROR("Callback exception in CAN_IPC_RECEIVER: [" << e.what()
+										      << "].");
+			}
+		}
+
+		// std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+}
+
+void CAN_IPC_RECEIVER::receive_ipc_can_task()
+{
+	char ctarget_can_port5_instance[16];
+	char ctarget_can_port6_instance[16];
+	char ctarget_can_port7_instance[16];
+	char ctarget_can_port8_instance[16];
+	char ctarget_can_port9_instance[16];
+
+	strcpy(ctarget_can_port5_instance,
+	       this->get_can_ipc_port_5_instance()->can_port_instance.c_str());
+	can_port_target_t can_port_5_target = {
+		.target_instance = ctarget_can_port5_instance,
+		.can_port_index =
+			static_cast<uint8_t>(this->get_can_ipc_port_5_instance()->can_dev_port),
+	};
+
+	strcpy(ctarget_can_port6_instance,
+	       this->get_can_ipc_port_6_instance()->can_port_instance.c_str());
+	can_port_target_t can_port_6_target = {
+		.target_instance = ctarget_can_port6_instance,
+		.can_port_index =
+			static_cast<uint8_t>(this->get_can_ipc_port_6_instance()->can_dev_port),
+	};
+
+	strcpy(ctarget_can_port7_instance,
+	       this->get_can_ipc_port_7_instance()->can_port_instance.c_str());
+	can_port_target_t can_port_7_target = {
+		.target_instance = ctarget_can_port7_instance,
+		.can_port_index =
+			static_cast<uint8_t>(this->get_can_ipc_port_7_instance()->can_dev_port),
+	};
+
+	strcpy(ctarget_can_port8_instance,
+	       this->get_can_ipc_port_8_instance()->can_port_instance.c_str());
+	can_port_target_t can_port_8_target = {
+		.target_instance = ctarget_can_port8_instance,
+		.can_port_index =
+			static_cast<uint8_t>(this->get_can_ipc_port_8_instance()->can_dev_port),
+	};
+
+	strcpy(ctarget_can_port9_instance,
+	       this->get_can_ipc_port_9_instance()->can_port_instance.c_str());
+	can_port_target_t can_port_9_target = {
+		.target_instance = ctarget_can_port9_instance,
+		.can_port_index =
+			static_cast<uint8_t>(this->get_can_ipc_port_9_instance()->can_dev_port),
+	};
+
+	std::unique_ptr<canframe> rx_frame = std::make_unique<canframe>();
+
+	while (this->receive_ipc_can_task_running_.load()) {
+		// set the scope for the mutex lock
+		{
+			std::unique_lock<std::mutex> lock(this->receive_ipc_can_task_paused_mutex_);
+			this->receive_ipc_can_task_paused_condition_.wait(lock, [this]() {
+				// if task paused, blocking task.
+				return (!this->receive_ipc_can_task_paused_);
+			});
+		}
+
+		if (this->is_received_can_5_port.load()) {
+			this->get_raw_can_data(can_port_5_target, rx_frame);
+		}
+		if (this->is_received_can_6_port.load()) {
+			this->get_raw_can_data(can_port_6_target, rx_frame);
+		}
+		if (this->is_received_can_7_port.load()) {
+			this->get_raw_can_data(can_port_7_target, rx_frame);
+		}
+		if (this->is_received_can_8_port.load()) {
+			this->get_raw_can_data(can_port_8_target, rx_frame);
+		}
+		if (this->is_received_can_9_port.load()) {
+			this->get_raw_can_data(can_port_9_target, rx_frame);
+		}
+
+		// std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+}
+
+void CAN_IPC_RECEIVER::create_work_queue_task()
+{
+	this->work_task_queue_paused_.store(false);
+	this->work_task_queue_running_.store(true);
+	this->work_queue_task_ = std::thread(&CAN_IPC_RECEIVER::work_queue_task, this);
+	this->work_queue_task_.detach();
+}
+
+void CAN_IPC_RECEIVER::create_receive_ipc_can_task()
+{
+	this->receive_ipc_can_task_paused_.store(false);
+	this->receive_ipc_can_task_running_.store(true);
+	this->receive_ipc_can_task_ = std::thread(&CAN_IPC_RECEIVER::receive_ipc_can_task, this);
+	this->receive_ipc_can_task_.detach();
+}
+
+void CAN_IPC_RECEIVER::pause_work_queue_task()
+{
+	this->work_task_queue_paused_.store(true);
+}
+
+void CAN_IPC_RECEIVER::pause_receive_ipc_can_task()
+{
+	this->receive_ipc_can_task_paused_.store(true);
+}
+
+void CAN_IPC_RECEIVER::resume_work_queue_task()
+{
+	{
+		std::lock_guard<std::mutex> lock(this->work_task_queue_paused_mutex_);
+		this->work_task_queue_paused_.store(false);
+	}
+	this->work_task_queue_paused_condition_.notify_one();
+}
+
+void CAN_IPC_RECEIVER::resume_receive_ipc_can_task()
+{
+	{
+		std::lock_guard<std::mutex> lock(this->receive_ipc_can_task_paused_mutex_);
+		this->receive_ipc_can_task_paused_.store(false);
+	}
+	this->receive_ipc_can_task_paused_condition_.notify_one();
+}
+
+void CAN_IPC_RECEIVER::enable_can_receiver_port(const CAN_IPC_CONFIG_T *can_ipc_config)
+{
+	std::unique_ptr<CAN_IPC_CONFIG_T> can_ipc_port_config =
+		std::make_unique<CAN_IPC_CONFIG_T>(*can_ipc_config);
+	switch (can_ipc_config->can_dev_port) {
+	case CAN_DEV_PORT_E::CAN_DEV_PORT_5: {
+		this->is_received_can_5_port.store(true);
+		this->get_can_ipc_port_5_instance() = std::move(can_ipc_port_config);
+		break;
+	}
+	case CAN_DEV_PORT_E::CAN_DEV_PORT_6: {
+		this->is_received_can_6_port.store(true);
+		this->get_can_ipc_port_6_instance() = std::move(can_ipc_port_config);
+		break;
+	}
+	case CAN_DEV_PORT_E::CAN_DEV_PORT_7: {
+		this->is_received_can_7_port.store(true);
+		this->get_can_ipc_port_7_instance() = std::move(can_ipc_port_config);
+		break;
+	}
+	case CAN_DEV_PORT_E::CAN_DEV_PORT_8: {
+		this->is_received_can_8_port.store(true);
+		this->get_can_ipc_port_8_instance() = std::move(can_ipc_port_config);
+		break;
+	}
+	case CAN_DEV_PORT_E::CAN_DEV_PORT_9: {
+		this->is_received_can_9_port.store(true);
+		this->get_can_ipc_port_9_instance() = std::move(can_ipc_port_config);
+		break;
+	}
+	// default as can 5 port
+	default: {
+		this->is_received_can_5_port.store(true);
+		this->get_can_ipc_port_5_instance() = std::move(can_ipc_port_config);
+		break;
+	}
+	}
+}
+
+void CAN_IPC_RECEIVER::start_can_ipc_receiver()
+{
+	this->work_queue_handle->clear_queue();
+	this->create_work_queue_task();
+	this->create_receive_ipc_can_task();
+}
+
+void CAN_IPC_RECEIVER::pause_can_ipc_receiver()
+{
+	this->pause_receive_ipc_can_task();
+	this->pause_work_queue_task();
+}
+
+void CAN_IPC_RECEIVER::resume_can_ipc_receiver()
+{
+	this->resume_work_queue_task();
+	this->resume_receive_ipc_can_task();
 }

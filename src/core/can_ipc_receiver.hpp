@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
 #ifndef __CAN_IPC_RECEIVER_HPP__
 #define __CAN_IPC_RECEIVER_HPP__
 #include "can_struct_define.h"
@@ -20,10 +21,12 @@
 #include "can_struct_internal_define.hpp"
 #include "message_log.hpp"
 #include "work_queue.hpp"
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -36,6 +39,7 @@ typedef struct {
 	uint32_t can_filter_id;
 	uint32_t can_filter_mask;
 	CAN_DEV_PORT_E can_port;
+	void *user_data;
 	can_rx_callback_t can_filter_callback;
 } CAN_IPC_FILTER_T;
 
@@ -50,6 +54,8 @@ typedef struct {
 	std::unordered_map<uint32_t, CAN_IPC_FILTER_T> can_ipc_filter_map;
 } CAN_IPC_RECEIVER_FILTER_T;
 
+struct canframe;
+
 class CAN_IPC_RECEIVER
 {
       public:
@@ -58,7 +64,13 @@ class CAN_IPC_RECEIVER
 		LOG_DEBUG("CAN_IPC_RECEIVER impl init.");
 		this->init_can_filter();
 	};
-	~CAN_IPC_RECEIVER() = default;
+	~CAN_IPC_RECEIVER()
+	{
+		this->receive_ipc_can_task_paused_.store(true);
+		this->work_task_queue_paused_.store(true);
+		this->receive_ipc_can_task_running_.store(false);
+		this->work_task_queue_running_.store(false);
+	};
 	CAN_IPC_RECEIVER(const CAN_IPC_RECEIVER &) = delete;
 	CAN_IPC_RECEIVER &operator=(const CAN_IPC_RECEIVER &) = delete;
 	static std::unique_ptr<CAN_IPC_RECEIVER> &getInstance()
@@ -69,8 +81,66 @@ class CAN_IPC_RECEIVER
 	};
 	int register_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter);
 	int deregister_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter);
+	void start_can_ipc_receiver();
+	void pause_can_ipc_receiver();
+	void resume_can_ipc_receiver();
+	void enable_can_receiver_port(const CAN_IPC_CONFIG_T *can_ipc_config);
 
       private:
+	static inline std::atomic<bool> receive_ipc_can_task_running_{false};
+	static inline std::atomic<bool> work_task_queue_running_{false};
+	static inline std::atomic<bool> receive_ipc_can_task_paused_{true};
+	static inline std::atomic<bool> work_task_queue_paused_{true};
+
+	static inline std::atomic<bool> is_received_can_5_port{false};
+	static inline std::atomic<bool> is_received_can_6_port{false};
+	static inline std::atomic<bool> is_received_can_7_port{false};
+	static inline std::atomic<bool> is_received_can_8_port{false};
+	static inline std::atomic<bool> is_received_can_9_port{false};
+
+	static std::unique_ptr<CAN_IPC_CONFIG_T> &get_can_ipc_port_5_instance()
+	{
+		static std::unique_ptr<CAN_IPC_CONFIG_T> instance =
+			std::make_unique<CAN_IPC_CONFIG_T>();
+		return instance;
+	}
+
+	static std::unique_ptr<CAN_IPC_CONFIG_T> &get_can_ipc_port_6_instance()
+	{
+		static std::unique_ptr<CAN_IPC_CONFIG_T> instance =
+			std::make_unique<CAN_IPC_CONFIG_T>();
+		return instance;
+	}
+
+	static std::unique_ptr<CAN_IPC_CONFIG_T> &get_can_ipc_port_7_instance()
+	{
+		static std::unique_ptr<CAN_IPC_CONFIG_T> instance =
+			std::make_unique<CAN_IPC_CONFIG_T>();
+		return instance;
+	}
+
+	static std::unique_ptr<CAN_IPC_CONFIG_T> &get_can_ipc_port_8_instance()
+	{
+		static std::unique_ptr<CAN_IPC_CONFIG_T> instance =
+			std::make_unique<CAN_IPC_CONFIG_T>();
+		return instance;
+	}
+
+	static std::unique_ptr<CAN_IPC_CONFIG_T> &get_can_ipc_port_9_instance()
+	{
+		static std::unique_ptr<CAN_IPC_CONFIG_T> instance =
+			std::make_unique<CAN_IPC_CONFIG_T>();
+		return instance;
+	}
+
+	static std::thread work_queue_task_;
+	static std::thread receive_ipc_can_task_;
+
+	mutable std::mutex receive_ipc_can_task_paused_mutex_;
+	mutable std::mutex work_task_queue_paused_mutex_;
+	std::condition_variable receive_ipc_can_task_paused_condition_;
+	std::condition_variable work_task_queue_paused_condition_;
+
 	std::unique_ptr<WORK_QUEUE> &work_queue_handle = WORK_QUEUE::getInstance();
 	static std::unique_ptr<CAN_IPC_RECEIVER_FILTER_T> &get_can_ipc_receiver_port_5_filter()
 	{
@@ -109,8 +179,18 @@ class CAN_IPC_RECEIVER
 
 	void init_can_filter();
 	void clear_hash_table(CAN_IPC_RECEIVER_FILTER_T &can_ipc_receiver_filter);
-	int match_can_filter(uint32_t can_port, uint32_t raw_can_id);
+	int match_can_filter(CAN_DEV_PORT_E can_port, const struct can_frame_t raw_can_frame);
 	CAN_IPC_RECEIVER_FILTER_T *return_can_ipc_receiver_filter(const CAN_DEV_PORT_E can_port);
+	void work_queue_task();
+	void receive_ipc_can_task();
+	void create_work_queue_task();
+	void create_receive_ipc_can_task();
+	void pause_work_queue_task();
+	void pause_receive_ipc_can_task();
+	void resume_work_queue_task();
+	void resume_receive_ipc_can_task();
+	void get_raw_can_data(const can_port_target_t &can_port_target,
+			      std::unique_ptr<canframe> &rx_frame);
 };
 
 #endif // __CAN_IPC_RECEIVER_HPP__

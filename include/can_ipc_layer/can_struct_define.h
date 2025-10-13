@@ -150,6 +150,8 @@ struct can_filter_t {
 	uint32_t mask;
 	/** CAN port. */
 	CAN_PORT_E can_port;
+	/** User data to pass to callback function. */
+	void *user_data;
 };
 
 /**

@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma once
 #ifndef __IPC_BOX_CONTROLLER_H__
 #define __IPC_BOX_CONTROLLER_H__
 

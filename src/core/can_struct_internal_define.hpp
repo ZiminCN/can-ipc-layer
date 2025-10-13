@@ -48,6 +48,19 @@ enum class CAN_DEV_PORT_E {
  */
 
 /**
+ * @brief refer to @see @arg CAN_IPC_CONFIG_T abstract struct
+ *
+ * @{
+ */
+typedef struct {
+	char *target_instance;
+	int can_port_index;
+} can_port_target_t;
+/**
+ * @}
+ */
+
+/**
  * @brief config CAN IPC instance port
  * @param can_port_instance CAN IPC instance port name, refer to @see @arg
  * CAN_IPC_INS0_CANX_CHANX

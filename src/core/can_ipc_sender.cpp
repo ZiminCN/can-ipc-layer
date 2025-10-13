@@ -76,19 +76,6 @@ void CAN_IPC_SENDER::test_send_can_frame()
 	}
 }
 
-/**
- * @brief refer to @see @arg CAN_IPC_CONFIG_T abstract struct
- *
- * @{
- */
-typedef struct {
-	char *target_instance;
-	int can_port_index;
-} can_port_target_t;
-/**
- * @}
- */
-
 // single can frame send function
 int CAN_IPC_SENDER::send_can_data(CAN_IPC_CONFIG_T *can_ipc_config, const can_frame_t &frame)
 {
