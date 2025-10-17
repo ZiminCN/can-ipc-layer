@@ -37,8 +37,8 @@
  * @note hash table value: callback function (only one callback function is allowed for each can id)
  */
 typedef struct {
-	uint32_t can_filter_id;
-	uint32_t can_filter_mask;
+	uint32_t *can_filter_id;
+	uint32_t can_filter_id_cnt;
 	CAN_DEV_PORT_E can_port;
 	void *user_data;
 	can_rx_callback_t can_filter_callback;
@@ -46,11 +46,9 @@ typedef struct {
 
 typedef struct {
 	CAN_DEV_PORT_E can_port;
-	// can mask hash table: can mask(key value) + can mask count
 	// can id hash table: can id(key value) + can id count
 	// can filter hash table: can id(key value) + CAN_IPC_FILTER_T(include callback
 	// func interface)
-	std::unordered_map<uint32_t, int> can_ipc_filter_mask_map;
 	std::unordered_map<uint32_t, int> can_ipc_filter_id_map;
 	std::unordered_map<uint32_t, CAN_IPC_FILTER_T> can_ipc_filter_map;
 } CAN_IPC_RECEIVER_FILTER_T;

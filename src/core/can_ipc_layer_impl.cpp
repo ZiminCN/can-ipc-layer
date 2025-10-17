@@ -134,12 +134,9 @@ int CAN_IPC_LAYER_IMPL::lib_can_send(const CAN_PORT_E can_port, const can_frame_
 int CAN_IPC_LAYER_IMPL::lib_can_register_can_filter(const can_filter_t &can_filter,
 						    const can_rx_callback_t &can_rx_callback)
 {
-	(void)can_filter;
-	(void)can_rx_callback;
-
 	CAN_IPC_FILTER_T can_ipc_receiver_filter = {
 		.can_filter_id = can_filter.id,
-		.can_filter_mask = can_filter.mask,
+		.can_filter_id_cnt = can_filter.id_cnt,
 		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
 		.user_data = can_filter.user_data,
 		.can_filter_callback = can_rx_callback,
@@ -153,7 +150,7 @@ int CAN_IPC_LAYER_IMPL::lib_can_deregister_can_filter(const can_filter_t &can_fi
 
 	CAN_IPC_FILTER_T can_ipc_receiver_filter = {
 		.can_filter_id = can_filter.id,
-		.can_filter_mask = can_filter.mask,
+		.can_filter_id_cnt = can_filter.id_cnt,
 		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
 		.user_data = can_filter.user_data,
 		.can_filter_callback = NULL,

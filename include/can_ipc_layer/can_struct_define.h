@@ -142,14 +142,12 @@ struct can_frame_t {
  * @brief CAN filter structure
  */
 struct can_filter_t {
-	/** CAN identifier to match. */
-	uint32_t id;
-	/** CAN identifier matching mask. If a bit in this mask is 0, the value
-	 * of the corresponding bit in the ``id`` field is ignored by the filter.
-	 */
-	uint32_t mask;
 	/** CAN port. */
 	CAN_PORT_E can_port;
+	/** CAN identifier to match. */
+	uint32_t *id;
+	/** count of CAN identifier*/
+	uint32_t id_cnt;
 	/** User data to pass to callback function. */
 	void *user_data;
 };

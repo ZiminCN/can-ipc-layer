@@ -43,6 +43,25 @@ void get_can_data_callback(struct can_frame_t *frame, void *user_data)
 	}
 	std::cout << "]." << std::endl;
 
+	switch (frame->id) {
+	case 0x123: {
+		std::cout << "test 1" << std::endl;
+		break;
+	}
+	case 0x124: {
+		std::cout << "test 2" << std::endl;
+		break;
+	}
+	case 0x125: {
+		std::cout << "test 3" << std::endl;
+		break;
+	}
+	case 0x000: {
+		std::cout << "test 4" << std::endl;
+		break;
+	}
+	}
+
 	// stop_test_flag.store(true);
 }
 
@@ -52,9 +71,10 @@ int main()
 	can_ipc_layer_handle_t *can_ipc_layer_handle = can_ipc_layer_create();
 
 	std::cout << "============ Test Add CAN Filter Func ============" << std::endl;
+	uint32_t can_filter_id[4] = {0x123, 0x124, 0x125, 0x000};
 	struct can_filter_t can_rx_filter;
-	can_rx_filter.id = 0x000;
-	can_rx_filter.mask = 0x000;
+	can_rx_filter.id = can_filter_id;
+	can_rx_filter.id_cnt = sizeof(can_filter_id) / sizeof(can_filter_id[0]);
 	can_rx_filter.can_port = CAN_PORT_E::CAN_PORT_5;
 	can_add_filter(&can_ipc_layer_handle, &can_rx_filter, get_can_data_callback);
 
