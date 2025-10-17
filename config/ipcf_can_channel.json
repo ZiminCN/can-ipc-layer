@@ -13,7 +13,7 @@
         "pkg_size_max": 4096,
         "dev_path":"/dev/ipcdrv",
         "dev_name":"ipcdrv",
-        "recv_timeout" : 4000
+        "recv_timeout" : 2000
       }
     }
   ]

@@ -46,6 +46,7 @@ class WORK_QUEUE
 	std::function<void()> dequeue_nonblocking();
 	void clear_queue();
 	bool is_queue_empty() const;
+	size_t size() const;
 
       private:
 	mutable std::mutex mutex_;
@@ -56,7 +57,6 @@ class WORK_QUEUE
 	const size_t max_work_queue_tasks_ = MAX_WORK_QUEUE_TASKS;
 
 	void stop();
-	size_t size() const;
 };
 
 #endif // __WORK_QUEUE_HPP__

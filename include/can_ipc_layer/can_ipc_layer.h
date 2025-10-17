@@ -48,7 +48,7 @@ void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle);
 int can_send(can_ipc_layer_handle_t **handle, const CAN_PORT_E can_port, const can_frame_t *frame);
 
 /**
- * @brief Add CAN filter.
+ * @brief Add CAN filter. It needs to be completed before can_ipc_receiver_start.
  * @param handle A pointer to the CAN IPC layer handle.
  * @param can_filter CAN filter structure
  * @param can_rx_callback CAN filter application callback handle
@@ -58,12 +58,37 @@ int can_add_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_filt
 		   const can_rx_callback_t can_rx_callback);
 
 /**
- * @brief Remove CAN filter.
+ * @brief Remove CAN filter. It needs to be completed before can_ipc_receiver_start.
  * @param handle A pointer to the CAN IPC layer handle.
  * @param can_filter CAN filter structure
  * @return 0 on success, negative value on failure. refer to @see @arg RET_CODE_DEF
  */
 int can_remove_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_filter);
+
+/**
+ * @brief Enable CAN receiver port. It needs to be completed before can_ipc_receiver_start.
+ * @param handle A pointer to the CAN IPC layer handle.
+ * @param can_port The CAN port to be enabled.
+ */
+void can_ipc_receiver_port_enable(can_ipc_layer_handle_t **handle, const CAN_PORT_E can_port);
+
+/**
+ * @brief Start CAN IPC receiver. It will start all enabled can ports receiving.
+ * @param handle A pointer to the CAN IPC layer handle.
+ */
+void can_ipc_receiver_start(can_ipc_layer_handle_t **handle);
+
+/**
+ * @brief Pause CAN IPC receiver. It will pause all can ports receiving.
+ * @param handle A pointer to the CAN IPC layer handle.
+ */
+void can_ipc_receiver_pause(can_ipc_layer_handle_t **handle);
+
+/**
+ * @brief Resume CAN IPC receiver. It will resume all can ports receiving.
+ * @param handle A pointer to the CAN IPC layer handle.
+ */
+void can_ipc_receiver_resume(can_ipc_layer_handle_t **handle);
 
 //! test func
 void test_can_send(can_ipc_layer_handle_t **handle);

@@ -160,3 +160,25 @@ int CAN_IPC_LAYER_IMPL::lib_can_deregister_can_filter(const can_filter_t &can_fi
 	};
 	return this->can_ipc_receiver_handle->deregister_can_filter(can_ipc_receiver_filter);
 }
+
+void CAN_IPC_LAYER_IMPL::lib_enable_can_receiver_port(const CAN_PORT_E can_port)
+{
+	CAN_IPC_CONFIG_T temp_can_ipc_instance_impl = lib_set_can_ipc_handle(can_port);
+
+	this->can_ipc_receiver_handle->enable_can_receiver_port(&temp_can_ipc_instance_impl);
+}
+
+void CAN_IPC_LAYER_IMPL::lib_start_can_ipc_receiver()
+{
+	this->can_ipc_receiver_handle->start_can_ipc_receiver();
+}
+
+void CAN_IPC_LAYER_IMPL::lib_pause_can_ipc_receiver()
+{
+	this->can_ipc_receiver_handle->pause_can_ipc_receiver();
+}
+
+void CAN_IPC_LAYER_IMPL::lib_resume_can_ipc_receiver()
+{
+	this->can_ipc_receiver_handle->resume_can_ipc_receiver();
+}

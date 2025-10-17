@@ -104,6 +104,34 @@ int can_remove_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_f
 	return -RET_CODE_INVALID_ARG;
 }
 
+void can_ipc_receiver_port_enable(can_ipc_layer_handle_t **handle, const CAN_PORT_E can_port)
+{
+	if (handle && *handle) {
+		(*handle)->impl->lib_enable_can_receiver_port(can_port);
+	}
+}
+
+void can_ipc_receiver_start(can_ipc_layer_handle_t **handle)
+{
+	if (handle && *handle) {
+		(*handle)->impl->lib_start_can_ipc_receiver();
+	}
+}
+
+void can_ipc_receiver_pause(can_ipc_layer_handle_t **handle)
+{
+	if (handle && *handle) {
+		(*handle)->impl->lib_pause_can_ipc_receiver();
+	}
+}
+
+void can_ipc_receiver_resume(can_ipc_layer_handle_t **handle)
+{
+	if (handle && *handle) {
+		(*handle)->impl->lib_resume_can_ipc_receiver();
+	}
+}
+
 //! test func
 void test_can_send(can_ipc_layer_handle_t **handle)
 {

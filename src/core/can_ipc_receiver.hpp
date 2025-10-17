@@ -21,6 +21,7 @@
 #include "can_struct_internal_define.hpp"
 #include "message_log.hpp"
 #include "work_queue.hpp"
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <functional>
@@ -133,8 +134,20 @@ class CAN_IPC_RECEIVER
 		return instance;
 	}
 
-	static std::thread work_queue_task_;
-	static std::thread receive_ipc_can_task_;
+	// static std::thread work_queue_task_;
+	// static std::thread receive_ipc_can_task_;
+
+	static std::thread &get_work_queue_task()
+	{
+		static std::thread work_queue_task_;
+		return work_queue_task_;
+	}
+
+	static std::thread &get_receive_ipc_can_task()
+	{
+		static std::thread receive_ipc_can_task_;
+		return receive_ipc_can_task_;
+	}
 
 	mutable std::mutex receive_ipc_can_task_paused_mutex_;
 	mutable std::mutex work_task_queue_paused_mutex_;
@@ -189,8 +202,7 @@ class CAN_IPC_RECEIVER
 	void pause_receive_ipc_can_task();
 	void resume_work_queue_task();
 	void resume_receive_ipc_can_task();
-	void get_raw_can_data(const can_port_target_t &can_port_target,
-			      std::unique_ptr<canframe> &rx_frame);
+	void get_raw_can_data(const can_port_target_t &can_port_target);
 };
 
 #endif // __CAN_IPC_RECEIVER_HPP__

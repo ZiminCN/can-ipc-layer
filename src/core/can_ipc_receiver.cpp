@@ -19,7 +19,9 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <memory>
+#include <sstream>
 
 // NOTE[x]: [Core] Hash table(message info; callback info;)
 // NOTE[]: [Core] message receive filter task(blockade)
@@ -237,36 +239,70 @@ int CAN_IPC_RECEIVER::match_can_filter(CAN_DEV_PORT_E can_port,
 	return RET_CODE_SUCCESS;
 }
 
-void CAN_IPC_RECEIVER::get_raw_can_data(const can_port_target_t &can_port_target,
-					std::unique_ptr<canframe> &rx_frame)
+// TODO: modified as smart pointer to avoid memory leak
+void CAN_IPC_RECEIVER::get_raw_can_data(const can_port_target_t &can_port_target)
 {
+// single reception of multiple can frames
+
+// 16000/80 = 200 packets
+#define SINGLE_RX_BUF_SIZE 16000
+
 	struct pack_info pack = {
 		.soc_ts = 0,
 		.data_num = 0,
 		.mcu_ts = 0,
-		.length = sizeof(struct canframe),
+		.length = SINGLE_RX_BUF_SIZE / sizeof(struct canframe),
 		.unused = 0,
 		.unused_1 = 0,
 	};
 
-	canRecvMsgFrame(can_port_target.target_instance, rx_frame.get(), &pack);
+	struct canframe *rx_frame = (struct canframe *)malloc(SINGLE_RX_BUF_SIZE);
 
-	struct can_frame_t can_frame = {
-		.id = rx_frame->canid,
-		.dlc = can_bytes_to_dlc(rx_frame->len),
-		.flags = rx_frame->can_type,
-		.data = 0,
-	};
+	if (rx_frame == NULL) {
+		LOG_ERROR("malloc memory fail!");
+		return;
+	}
 
-	memcpy(can_frame.data, rx_frame->data, sizeof(rx_frame->len));
+	memset(rx_frame, 0, SINGLE_RX_BUF_SIZE);
+	canRecvMsgFrame(can_port_target.target_instance, rx_frame, &pack);
 
-	this->match_can_filter(static_cast<CAN_DEV_PORT_E>(can_port_target.can_port_index),
-			       can_frame);
+	// decode multiple can frames
+	struct canframe *single_canframe = rx_frame;
+
+	for (uint32_t i = 0; i < pack.data_num; i++) {
+
+		if (single_canframe->len == 0)
+			continue;
+
+		if (single_canframe != NULL) {
+			struct can_frame_t can_frame = {
+				.id = single_canframe->canid,
+				.dlc = can_bytes_to_dlc(single_canframe->len),
+				.flags = single_canframe->can_type,
+				.data = 0,
+			};
+
+			memcpy(can_frame.data, single_canframe->data, single_canframe->len);
+
+			this->match_can_filter(
+				static_cast<CAN_DEV_PORT_E>(can_port_target.can_port_index),
+				can_frame);
+
+			single_canframe++;
+		}
+	}
+
+	free(rx_frame);
 }
 
 void CAN_IPC_RECEIVER::work_queue_task()
 {
 	while (this->work_task_queue_running_.load()) {
+
+		//! for test
+		LOG_DEBUG("Current work queue task count: ["
+			  << static_cast<int>(this->work_queue_handle->size()) << "].");
+
 		// set the scope for the mutex lock
 		{
 			std::unique_lock<std::mutex> lock(this->work_task_queue_paused_mutex_);
@@ -339,8 +375,6 @@ void CAN_IPC_RECEIVER::receive_ipc_can_task()
 			static_cast<uint8_t>(this->get_can_ipc_port_9_instance()->can_dev_port),
 	};
 
-	std::unique_ptr<canframe> rx_frame = std::make_unique<canframe>();
-
 	while (this->receive_ipc_can_task_running_.load()) {
 		// set the scope for the mutex lock
 		{
@@ -352,19 +386,19 @@ void CAN_IPC_RECEIVER::receive_ipc_can_task()
 		}
 
 		if (this->is_received_can_5_port.load()) {
-			this->get_raw_can_data(can_port_5_target, rx_frame);
+			this->get_raw_can_data(can_port_5_target);
 		}
 		if (this->is_received_can_6_port.load()) {
-			this->get_raw_can_data(can_port_6_target, rx_frame);
+			this->get_raw_can_data(can_port_6_target);
 		}
 		if (this->is_received_can_7_port.load()) {
-			this->get_raw_can_data(can_port_7_target, rx_frame);
+			this->get_raw_can_data(can_port_7_target);
 		}
 		if (this->is_received_can_8_port.load()) {
-			this->get_raw_can_data(can_port_8_target, rx_frame);
+			this->get_raw_can_data(can_port_8_target);
 		}
 		if (this->is_received_can_9_port.load()) {
-			this->get_raw_can_data(can_port_9_target, rx_frame);
+			this->get_raw_can_data(can_port_9_target);
 		}
 
 		// std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -375,16 +409,17 @@ void CAN_IPC_RECEIVER::create_work_queue_task()
 {
 	this->work_task_queue_paused_.store(false);
 	this->work_task_queue_running_.store(true);
-	this->work_queue_task_ = std::thread(&CAN_IPC_RECEIVER::work_queue_task, this);
-	this->work_queue_task_.detach();
+	this->get_work_queue_task() = std::thread(&CAN_IPC_RECEIVER::work_queue_task, this);
+	this->get_work_queue_task().detach();
 }
 
 void CAN_IPC_RECEIVER::create_receive_ipc_can_task()
 {
 	this->receive_ipc_can_task_paused_.store(false);
 	this->receive_ipc_can_task_running_.store(true);
-	this->receive_ipc_can_task_ = std::thread(&CAN_IPC_RECEIVER::receive_ipc_can_task, this);
-	this->receive_ipc_can_task_.detach();
+	this->get_receive_ipc_can_task() =
+		std::thread(&CAN_IPC_RECEIVER::receive_ipc_can_task, this);
+	this->get_receive_ipc_can_task().detach();
 }
 
 void CAN_IPC_RECEIVER::pause_work_queue_task()
@@ -417,6 +452,13 @@ void CAN_IPC_RECEIVER::resume_receive_ipc_can_task()
 
 void CAN_IPC_RECEIVER::enable_can_receiver_port(const CAN_IPC_CONFIG_T *can_ipc_config)
 {
+	if (this->receive_ipc_can_task_running_.load()) {
+		LOG_WARNING("Please enable can receiver port before start can ipc receiver or "
+			    "pause can "
+			    "ipc receiver.");
+		return;
+	}
+
 	std::unique_ptr<CAN_IPC_CONFIG_T> can_ipc_port_config =
 		std::make_unique<CAN_IPC_CONFIG_T>(*can_ipc_config);
 	switch (can_ipc_config->can_dev_port) {
