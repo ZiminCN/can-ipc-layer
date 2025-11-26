@@ -67,7 +67,7 @@ void get_can_data_callback(struct can_frame_t *frame, void *user_data)
 
 int main()
 {
-        int ret = 0;
+	int ret = 0;
 
 	std::cout << "============ Debug Test Start! ============" << std::endl;
 	can_ipc_layer_handle_t *can_ipc_layer_handle = can_ipc_layer_create();
@@ -79,10 +79,10 @@ int main()
 	can_rx_filter.id_cnt = sizeof(can_filter_id) / sizeof(can_filter_id[0]);
 	can_rx_filter.can_port = CAN_PORT_E::CAN_PORT_5;
 	ret = can_add_filter(&can_ipc_layer_handle, &can_rx_filter, get_can_data_callback);
-        if(ret != 0){
-                std::cerr << "can_add_filter failed! ret is [ " << ret << " ]." << std::endl;
-                return -1;
-        }
+	if (ret != 0) {
+		std::cerr << "can_add_filter failed! ret is [ " << ret << " ]." << std::endl;
+		return -1;
+	}
 
 	std::cout << "============ Test Start Receive Data Func ============" << std::endl;
 	can_ipc_receiver_port_enable(&can_ipc_layer_handle, CAN_PORT_E::CAN_PORT_5);
@@ -100,10 +100,10 @@ int main()
 	tx_frame.flags = CAN_MODE_FD;
 	memset(tx_frame.data, 0xFF, sizeof(tx_frame.data));
 	ret = can_send(&can_ipc_layer_handle, CAN_PORT_E::CAN_PORT_5, &tx_frame);
-        if(ret != 0){
-                std::cerr << "can_send failed! ret is [ " << ret << " ]." << std::endl;
-                return -1;
-        }
+	if (ret != 0) {
+		std::cerr << "can_send failed! ret is [ " << ret << " ]." << std::endl;
+		return -1;
+	}
 
 	int timer_count = 0;
 
