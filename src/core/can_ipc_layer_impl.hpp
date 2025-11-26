@@ -80,6 +80,7 @@ class CAN_IPC_LAYER_IMPL
 	CAN_DEV_PORT_E lib_get_can_dev_port(const CAN_PORT_E can_port);
 
 	CAN_IPC_CONFIG_T lib_set_can_ipc_handle(CAN_PORT_E can_port);
+	bool copy_ipc_config_data();
 };
 
 #endif // __CAN_IPC_LAYER_IMPL_HPP__
