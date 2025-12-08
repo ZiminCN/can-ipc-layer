@@ -73,7 +73,14 @@ bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 	// copy config file data as soft link file to current elf path
 	{
 		try{
-			std::filesystem::create_directory_symlink(so_path, std::filesystem::current_path() / "config");
+			// check target path exists config/ file
+			if(std::filesystem::exists(std::filesystem::current_path())){
+				std::cerr << "[Warning]: An existing IPC CAN configuration link already exists. " << std::endl;
+				std::cerr << "[Warning]: You can manually delete it to ensure that the latest configuration link is automatically overwritten." << std::endl;
+			}else{
+				std::cout << "get ipc can config and copy to [" << std::filesystem::current_path() << "]" << std::endl;
+				std::filesystem::create_directory_symlink(so_path, std::filesystem::current_path() / "config");
+			}
 		} catch (const std::filesystem::filesystem_error& e) {
 			LOG_ERROR("Copy Shared Object file soft link file error: " << e.what());
 			return false;
