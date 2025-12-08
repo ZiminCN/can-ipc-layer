@@ -78,8 +78,8 @@ chmod +x deb_build/DEBIAN/postinst
 cat > deb_build/DEBIAN/prerm << EOF
 #!/bin/bash
 # 清理符号链接
-rmdir /usr/local/lib/can_ipc_layer 2>/dev/null || true
-rmdir /usr/local/include/can_ipc_layer 2>/dev/null || true
+rmdir /usr/local/lib/can_ipc_layer/* 2>/dev/null || true
+rmdir /usr/local/include/can_ipc_layer/* 2>/dev/null || true
 ldconfig
 EOF
 chmod +x deb_build/DEBIAN/prerm

@@ -103,8 +103,8 @@ int main()
 		timer_count += 1;
 	}
 
-	// std::cout << "============ Test Remove CAN Filter Func ============" << std::endl;
-	// can_remove_filter(&can_ipc_layer_handle, &can_rx_filter);
+	std::cout << "============ Test Remove CAN Filter Func ============" << std::endl;
+	can_remove_filter(&can_ipc_layer_handle, &can_rx_filter);
 
 	can_ipc_layer_destroy(&can_ipc_layer_handle);
 	std::cout << "============ Debug Test End ============" << std::endl;

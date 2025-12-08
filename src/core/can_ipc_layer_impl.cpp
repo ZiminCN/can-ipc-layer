@@ -14,13 +14,15 @@
 // limitations under the License.
 
 #include "can_ipc_layer_impl.hpp"
-#include <string>
+
+#include <limits.h>
+
 #include <filesystem>
 #include <fstream>
 #include <hobot_can_hal.h>
-#include <unistd.h>
-#include <limits.h>
 #include <iostream>
+#include <string>
+#include <unistd.h>
 
 std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::Instance =
 	std::make_unique<CAN_IPC_LAYER_IMPL>();
@@ -56,7 +58,7 @@ void CAN_IPC_LAYER_IMPL::deinit_can_dev()
 bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 {
 	// find where is the executable file path
-	if(!std::filesystem::exists(std::filesystem::current_path())){
+	if (!std::filesystem::exists(std::filesystem::current_path())) {
 		LOG_ERROR("Invaild execute path");
 		return false;
 	}
@@ -65,26 +67,33 @@ bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 
 	// find if the shared object file exists
 	std::string so_path = "/usr/local/include/can_ipc_layer/config";
-	if(!std::filesystem::exists(so_path) && !std::filesystem::is_directory(so_path)){
+	if (!std::filesystem::exists(so_path) && !std::filesystem::is_directory(so_path)) {
 		LOG_ERROR("Can not fine corrent Shared Object file");
 		return false;
 	}
 
 	// copy config file data as soft link file to current elf path
 	{
-		try{
+		try {
 			// check target path exists config/ file
-			if(std::filesystem::exists(std::filesystem::current_path())){
-				std::cerr << "[Warning]: An existing IPC CAN configuration link already exists. " << std::endl;
-				std::cerr << "[Warning]: You can manually delete it to ensure that the latest configuration link is automatically overwritten." << std::endl;
-			}else{
-				std::cout << "get ipc can config and copy to [" << std::filesystem::current_path() << "]" << std::endl;
-				std::filesystem::create_directory_symlink(so_path, std::filesystem::current_path() / "config");
+			if (std::filesystem::exists(std::filesystem::current_path() / "config")) {
+				std::cerr << "[Warning]: An existing IPC CAN configuration link "
+					     "already exists. "
+					  << std::endl;
+				std::cerr << "[Warning]: You can manually delete it to ensure that "
+					     "the latest configuration link is automatically "
+					     "overwritten."
+					  << std::endl;
+			} else {
+				std::cout << "get ipc can config and copy to ["
+					  << std::filesystem::current_path() << "]" << std::endl;
+				std::filesystem::create_directory_symlink(
+					so_path, std::filesystem::current_path() / "config");
 			}
-		} catch (const std::filesystem::filesystem_error& e) {
+		} catch (const std::filesystem::filesystem_error &e) {
 			LOG_ERROR("Copy Shared Object file soft link file error: " << e.what());
 			return false;
-		} catch (const std::exception& e) {
+		} catch (const std::exception &e) {
 			LOG_ERROR("Copy Shared Object file unknown error: " << e.what());
 			return false;
 		}

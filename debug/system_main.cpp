@@ -81,7 +81,6 @@ int main()
 	ret = can_add_filter(&can_ipc_layer_handle, &can_rx_filter, get_can_data_callback);
 	if (ret != 0) {
 		std::cerr << "can_add_filter failed! ret is [ " << ret << " ]." << std::endl;
-		return -1;
 	}
 
 	std::cout << "============ Test Start Receive Data Func ============" << std::endl;
@@ -95,14 +94,13 @@ int main()
 	std::cout << "============ Test Send Data Func ============" << std::endl;
 	std::cout << ">>>>>>>>>>>> Send Data ID: 0x123 <<<<<<<<<<<<" << std::endl;
 	struct can_frame_t tx_frame;
-	tx_frame.id = 0x123;
-	tx_frame.dlc = can_bytes_to_dlc(8);
+	tx_frame.id = 0x120;
+	tx_frame.dlc = can_bytes_to_dlc(64);
 	tx_frame.flags = CAN_MODE_FD;
 	memset(tx_frame.data, 0xFF, sizeof(tx_frame.data));
 	ret = can_send(&can_ipc_layer_handle, CAN_PORT_E::CAN_PORT_5, &tx_frame);
 	if (ret != 0) {
 		std::cerr << "can_send failed! ret is [ " << ret << " ]." << std::endl;
-		return -1;
 	}
 
 	int timer_count = 0;
