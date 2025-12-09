@@ -109,6 +109,12 @@ int CAN_IPC_RECEIVER::register_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter
 		return -RET_CODE_INVALID_ARG;
 	}
 
+	for (uint32_t it = 0; it < can_ipc_filter.can_filter_id_cnt; it++) {
+		LOG_DEBUG("Input can_ipc_filter.can_filter_id["
+			  << it << "]: [" << can_ipc_filter.can_filter_id[it] << "]");
+	}
+	LOG_DEBUG("Input can_ipc_filter.can_filter_id_cnt is " << can_ipc_filter.can_filter_id_cnt);
+
 	CAN_IPC_RECEIVER_FILTER_T *can_ipc_receiver_filter = this->return_can_ipc_receiver_filter(
 		static_cast<CAN_DEV_PORT_E>(can_ipc_filter.can_port));
 	if (can_ipc_receiver_filter == nullptr) {

@@ -79,6 +79,7 @@ int can_send(can_ipc_layer_handle_t **handle, const CAN_PORT_E can_port, const c
 		return ret;
 	}
 
+	LOG_ERROR("can_send error.");
 	return -RET_CODE_INVALID_ARG;
 }
 
@@ -91,6 +92,7 @@ int can_add_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_filt
 		return ret;
 	}
 
+	LOG_ERROR("can_add_filter error.");
 	return -RET_CODE_INVALID_ARG;
 }
 
@@ -101,6 +103,7 @@ int can_remove_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_f
 		return ret;
 	}
 
+	LOG_ERROR("can_remove_filter error.");
 	return -RET_CODE_INVALID_ARG;
 }
 

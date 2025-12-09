@@ -48,8 +48,9 @@ cp -r include/can_ipc_layer/* deb_build/usr/local/include/can_ipc_layer/
 cp -r config/ deb_build/usr/local/include/can_ipc_layer/
 
 cd deb_build/usr/local/lib/can_ipc_layer
-ln -s libcan_ipc_layer.so.0.0.3 libcan_ipc_layer.so.0
-ln -s libcan_ipc_layer.so.0 libcan_ipc_layer.so
+LIB_BASENAME=$(basename "$LIB_FILE")
+ln -s "$LIB_BASENAME" "libcan_ipc_layer.so.0"
+ln -s "libcan_ipc_layer.so.0" "libcan_ipc_layer.so"
 cd - > /dev/null
 
 cat > deb_build/DEBIAN/control << EOF

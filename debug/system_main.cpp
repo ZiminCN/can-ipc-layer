@@ -103,6 +103,14 @@ int main()
 		std::cerr << "can_send failed! ret is [ " << ret << " ]." << std::endl;
 	}
 
+	for (int it = 0; it <= 10; it++) {
+		ret = can_send(&can_ipc_layer_handle, CAN_PORT_E::CAN_PORT_5, &tx_frame);
+		if (ret != 0) {
+			std::cerr << "can_send failed! ret is [ " << ret << " ]." << std::endl;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+
 	int timer_count = 0;
 
 	// while((timer_count <= 10) && (!stop_test_flag.load())){
