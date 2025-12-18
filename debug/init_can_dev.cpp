@@ -13,30 +13,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#pragma once
-#ifndef __IPC_BOX_CONTROLLER_H__
-#define __IPC_BOX_CONTROLLER_H__
-
-#include "message_log.hpp"
+#include <atomic>
+#include <canhal/hobot_can_hal.h>
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
-#include <memory>
+#include <stdexcept>
+#include <string>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <thread>
+#include <unistd.h>
 
-class IPC_BOX_CONTROLLER
+int main(void)
 {
-      public:
-	IPC_BOX_CONTROLLER()
-	{
-		LOG_DEBUG("IPC_BOX_CONTROLLER impl init.");
-	};
-	~IPC_BOX_CONTROLLER() = default;
-	static std::unique_ptr<IPC_BOX_CONTROLLER> &getInstance()
-	{
-		static std::unique_ptr<IPC_BOX_CONTROLLER> Instance =
-			std::make_unique<IPC_BOX_CONTROLLER>();
-		return Instance;
-	};
+	std::cout << "Init CAN DEV!" << std::endl;
 
-      private:
-};
+	int ret = canInit();
+	if (ret != 0) {
+		std::cout << "canInit error!" << std::endl;
+	}
 
-#endif // __IPC_BOX_CONTROLLER_H__
+	std::this_thread::sleep_for(std::chrono::seconds(10));
+
+	canDeInit();
+
+	return 0;
+}

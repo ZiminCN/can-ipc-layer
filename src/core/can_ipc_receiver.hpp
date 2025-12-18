@@ -40,7 +40,7 @@ typedef struct {
 	uint32_t *can_filter_id;
 	uint32_t can_filter_id_cnt;
 	CAN_DEV_PORT_E can_port;
-	void *user_data;
+	int socket_index;
 	can_rx_callback_t can_filter_callback;
 } CAN_IPC_FILTER_T;
 

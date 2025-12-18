@@ -21,7 +21,6 @@
 #include "can_ipc_receiver.hpp"
 #include "can_ipc_sender.hpp"
 #include "can_struct_internal_define.hpp"
-#include "ipc_box_controller.hpp"
 #include "message_log.hpp"
 #include <atomic>
 #include <iostream>
@@ -51,7 +50,12 @@ class CAN_IPC_LAYER_IMPL
 	};
 	CAN_IPC_LAYER_IMPL(const CAN_IPC_LAYER_IMPL &) = delete;
 	CAN_IPC_LAYER_IMPL &operator=(const CAN_IPC_LAYER_IMPL &) = delete;
-	static std::unique_ptr<CAN_IPC_LAYER_IMPL> getInstance();
+	static std::unique_ptr<CAN_IPC_LAYER_IMPL> &getInstance()
+	{
+		static std::unique_ptr<CAN_IPC_LAYER_IMPL> Instance =
+			std::make_unique<CAN_IPC_LAYER_IMPL>();
+		return Instance;
+	}
 
 	void lib_test_can_send();
 	int lib_can_send(const CAN_PORT_E can_port, const can_frame_t &frame);
@@ -63,20 +67,18 @@ class CAN_IPC_LAYER_IMPL
 	void lib_start_can_ipc_receiver();
 	void lib_pause_can_ipc_receiver();
 	void lib_resume_can_ipc_receiver();
+	void init_can_dev();
+	void deinit_can_dev();
 
       private:
-	static std::unique_ptr<CAN_IPC_LAYER_IMPL> Instance;
 	mutable std::mutex can_dev_mutex;
 	static inline std::atomic<int> can_dev_ref_count{0};
 	std::unique_ptr<CAN_IPC_RECEIVER> &can_ipc_receiver_handle =
 		CAN_IPC_RECEIVER::getInstance();
 	std::unique_ptr<CAN_IPC_SENDER> &can_ipc_sender_handle = CAN_IPC_SENDER::getInstance();
-	std::unique_ptr<IPC_BOX_CONTROLLER> &ipc_box_controller_handle =
-		IPC_BOX_CONTROLLER::getInstance();
 
 	std::unique_ptr<CAN_IPC_CONFIG_T> can_ipc_config = std::make_unique<CAN_IPC_CONFIG_T>();
-	void init_can_dev();
-	void deinit_can_dev();
+
 	CAN_DEV_PORT_E lib_get_can_dev_port(const CAN_PORT_E can_port);
 
 	CAN_IPC_CONFIG_T lib_set_can_ipc_handle(CAN_PORT_E can_port);

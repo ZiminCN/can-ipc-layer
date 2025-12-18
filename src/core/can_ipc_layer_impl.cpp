@@ -24,14 +24,6 @@
 #include <string>
 #include <unistd.h>
 
-std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::Instance =
-	std::make_unique<CAN_IPC_LAYER_IMPL>();
-
-std::unique_ptr<CAN_IPC_LAYER_IMPL> CAN_IPC_LAYER_IMPL::getInstance()
-{
-	return std::move(CAN_IPC_LAYER_IMPL::Instance);
-}
-
 void CAN_IPC_LAYER_IMPL::init_can_dev()
 {
 	// init can api
@@ -67,8 +59,10 @@ bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 
 	// find if the shared object file exists
 	std::string so_path = "/usr/local/include/can_ipc_layer/config";
-	if (!std::filesystem::exists(so_path) && !std::filesystem::is_directory(so_path)) {
-		LOG_ERROR("Can not fine corrent Shared Object file");
+	if (!std::filesystem::exists(so_path) &&
+	    !std::filesystem::exists(std::filesystem::current_path() / "config") &&
+	    !std::filesystem::is_directory(so_path)) {
+		LOG_ERROR("Can not find corrent Shared Object file");
 		return false;
 	}
 
@@ -199,7 +193,7 @@ int CAN_IPC_LAYER_IMPL::lib_can_register_can_filter(const can_filter_t &can_filt
 		.can_filter_id = can_filter.id,
 		.can_filter_id_cnt = can_filter.id_cnt,
 		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
-		.user_data = can_filter.user_data,
+		.socket_index = can_filter.socket_index,
 		.can_filter_callback = can_rx_callback,
 	};
 	return this->can_ipc_receiver_handle->register_can_filter(can_ipc_receiver_filter);
@@ -207,13 +201,11 @@ int CAN_IPC_LAYER_IMPL::lib_can_register_can_filter(const can_filter_t &can_filt
 
 int CAN_IPC_LAYER_IMPL::lib_can_deregister_can_filter(const can_filter_t &can_filter)
 {
-	(void)can_filter;
-
 	CAN_IPC_FILTER_T can_ipc_receiver_filter = {
 		.can_filter_id = can_filter.id,
 		.can_filter_id_cnt = can_filter.id_cnt,
 		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
-		.user_data = can_filter.user_data,
+		.socket_index = can_filter.socket_index,
 		.can_filter_callback = NULL,
 	};
 	return this->can_ipc_receiver_handle->deregister_can_filter(can_ipc_receiver_filter);

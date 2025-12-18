@@ -13,134 +13,68 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "can_ipc_layer.h"
 #include "ret_code_def.h"
 
+#include <time.h>
+
 #include "can_ipc_layer_impl.hpp"
+#include "ipc_socket_controller.hpp"
 #include "message_log.hpp"
+#include <chrono>
 #include <iostream>
 #include <memory>
+#include <thread>
 
-// 定义不透明句柄的实际内容
-struct can_ipc_layer_handle_t {
-	std::unique_ptr<CAN_IPC_LAYER_IMPL> impl;
-	std::string impl_last_error = "None";
-
-	can_ipc_layer_handle_t(std::unique_ptr<CAN_IPC_LAYER_IMPL> ptr) : impl(std::move(ptr))
-	{
-	}
-
-	~can_ipc_layer_handle_t()
-	{
-		LOG_DEBUG("can_ipc_layer_handle_t impl_last_error is " << impl_last_error);
-	}
-
-	// 设置错误信息
-	void set_error(const std::string &error)
-	{
-		impl_last_error = error;
-		std::cerr << "Error: " << error << std::endl;
-	}
-};
-
-// 线程局部的错误信息
-thread_local std::string can_ipc_layer_last_error;
-
-// C接口实现
-extern "C" {
-
-// 兼容C接口，需要显式分配
-can_ipc_layer_handle_t *can_ipc_layer_create()
+void stop_test_thread()
 {
-	try {
-		LOG_DEBUG("can_ipc_layer_create.");
-		std::unique_ptr<CAN_IPC_LAYER_IMPL> impl = CAN_IPC_LAYER_IMPL::getInstance();
-		return new can_ipc_layer_handle_t(std::move(impl));
-	} catch (const std::exception &e) {
-		can_ipc_layer_last_error = e.what();
-		return nullptr;
+	uint8_t stop_count = 0;
+	std::shared_ptr<ipc_can::socket_shell::IPC_SOCKET_CONTROLLER> ipc_socket_impl =
+		ipc_can::socket_shell::IPC_SOCKET_CONTROLLER::getInstance();
+
+	while (1) {
+
+		if (stop_count > 60) {
+			ipc_socket_impl->stop();
+			break;
+		}
+
+		// LOG_DEBUG("stop idle...");
+
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		stop_count += 1;
 	}
 }
 
-// 兼容C接口，需要显式销毁
-void can_ipc_layer_destroy(can_ipc_layer_handle_t **handle)
+void server_thread()
 {
-	if (handle && *handle) {
-		delete *handle;
-		*handle = nullptr;
-		LOG_DEBUG("can_ipc_layer_destroy.");
+	std::shared_ptr<ipc_can::socket_shell::IPC_SOCKET_CONTROLLER> ipc_socket_impl =
+		ipc_can::socket_shell::IPC_SOCKET_CONTROLLER::getInstance();
+
+	bool ret = ipc_socket_impl->start_controller();
+	if (ret != true) {
+		LOG_ERROR("CAN IPC Socket Service Controller create error!");
 	}
 }
 
-int can_send(can_ipc_layer_handle_t **handle, const CAN_PORT_E can_port, const can_frame_t *frame)
+int main()
 {
-	if (handle && *handle) {
-		int ret = (*handle)->impl->lib_can_send(can_port, *frame);
-		return ret;
-	}
+	// start ipc can socket controller
+	LOG_INFO("Start IPC CAN Socket Service !");
 
-	LOG_ERROR("can_send error.");
-	return -RET_CODE_INVALID_ARG;
+	std::shared_ptr<ipc_can::socket_shell::IPC_SOCKET_CONTROLLER> ipc_socket_impl =
+		ipc_can::socket_shell::IPC_SOCKET_CONTROLLER::getInstance();
+
+	std::thread stop(stop_test_thread);
+	std::thread server(server_thread);
+
+	stop.detach();
+	server.join();
+
+	ipc_socket_impl->deinit_can_dev();
+
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	LOG_INFO("Finish IPC CAN Socket Service !");
+
+	return 0;
 }
-
-int can_add_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_filter,
-		   const can_rx_callback_t can_rx_callback)
-{
-	if (handle && *handle) {
-		int ret =
-			(*handle)->impl->lib_can_register_can_filter(*can_filter, can_rx_callback);
-		return ret;
-	}
-
-	LOG_ERROR("can_add_filter error.");
-	return -RET_CODE_INVALID_ARG;
-}
-
-int can_remove_filter(can_ipc_layer_handle_t **handle, const can_filter_t *can_filter)
-{
-	if (handle && *handle) {
-		int ret = (*handle)->impl->lib_can_deregister_can_filter(*can_filter);
-		return ret;
-	}
-
-	LOG_ERROR("can_remove_filter error.");
-	return -RET_CODE_INVALID_ARG;
-}
-
-void can_ipc_receiver_port_enable(can_ipc_layer_handle_t **handle, const CAN_PORT_E can_port)
-{
-	if (handle && *handle) {
-		(*handle)->impl->lib_enable_can_receiver_port(can_port);
-	}
-}
-
-void can_ipc_receiver_start(can_ipc_layer_handle_t **handle)
-{
-	if (handle && *handle) {
-		(*handle)->impl->lib_start_can_ipc_receiver();
-	}
-}
-
-void can_ipc_receiver_pause(can_ipc_layer_handle_t **handle)
-{
-	if (handle && *handle) {
-		(*handle)->impl->lib_pause_can_ipc_receiver();
-	}
-}
-
-void can_ipc_receiver_resume(can_ipc_layer_handle_t **handle)
-{
-	if (handle && *handle) {
-		(*handle)->impl->lib_resume_can_ipc_receiver();
-	}
-}
-
-//! test func
-void test_can_send(can_ipc_layer_handle_t **handle)
-{
-	if (handle && *handle) {
-		(*handle)->impl->lib_test_can_send();
-	}
-}
-
-} // extern "C"

@@ -93,12 +93,6 @@ int CAN_IPC_RECEIVER::register_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter
 	// 2: [can_ipc_filter_id_map] emplace the CAN ID, if return error, increase the count value
 	// of the CAN ID
 
-	if (this->receive_ipc_can_task_running_.load()) {
-		LOG_WARNING("Please register can filter before start can ipc receiver or pause can "
-			    "ipc receiver.");
-		return -RET_CODE_INVALID_ARG;
-	}
-
 	if (can_ipc_filter.can_filter_id_cnt == 0) {
 		LOG_ERROR("CAN Filter ID count is zero.");
 		return -RET_CODE_INVALID_ARG;
@@ -152,12 +146,6 @@ int CAN_IPC_RECEIVER::deregister_can_filter(const CAN_IPC_FILTER_T &can_ipc_filt
 
 	// 2: [can_ipc_filter_map] Based on the count of the obtained CAN ID, if the count of the
 	// CAN ID is 0, erase this filter.
-
-	if (this->receive_ipc_can_task_running_.load()) {
-		LOG_WARNING("Please register can filter before start can ipc receiver or pause can "
-			    "ipc receiver.");
-		return -RET_CODE_INVALID_ARG;
-	}
 
 	if (can_ipc_filter.can_filter_id_cnt == 0) {
 		LOG_ERROR("CAN Filter ID count is zero.");
@@ -222,7 +210,7 @@ int CAN_IPC_RECEIVER::match_can_filter(CAN_DEV_PORT_E can_port,
 
 		std::function<void()> cb_func = [filter, raw_can_frame]() {
 			can_frame_t cb_frame = raw_can_frame;
-			filter.can_filter_callback(&cb_frame, filter.user_data);
+			filter.can_filter_callback(&cb_frame, filter.socket_index);
 		};
 
 		this->work_queue_handle->enqueue(cb_func);
@@ -240,9 +228,15 @@ void CAN_IPC_RECEIVER::get_raw_can_data(const can_port_target_t &can_port_target
 #define SINGLE_RX_BUF_SIZE 16000
 
 	struct pack_info pack = {
-		.soc_ts = 0,
+		.soc_ts = static_cast<uint64_t>(
+			std::chrono::duration_cast<std::chrono::milliseconds>(
+				std::chrono::system_clock::now().time_since_epoch())
+				.count()),
 		.data_num = 0,
-		.mcu_ts = 0,
+		.mcu_ts = static_cast<uint64_t>(
+			std::chrono::duration_cast<std::chrono::milliseconds>(
+				std::chrono::system_clock::now().time_since_epoch())
+				.count()),
 		.length = SINGLE_RX_BUF_SIZE / sizeof(struct canframe),
 		.unused = 0,
 		.unused_1 = 0,
@@ -392,7 +386,6 @@ void CAN_IPC_RECEIVER::receive_ipc_can_task()
 		if (this->is_received_can_9_port.load()) {
 			this->get_raw_can_data(can_port_9_target);
 		}
-
 		// std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
@@ -444,13 +437,6 @@ void CAN_IPC_RECEIVER::resume_receive_ipc_can_task()
 
 void CAN_IPC_RECEIVER::enable_can_receiver_port(const CAN_IPC_CONFIG_T *can_ipc_config)
 {
-	if (this->receive_ipc_can_task_running_.load()) {
-		LOG_WARNING("Please enable can receiver port before start can ipc receiver or "
-			    "pause can "
-			    "ipc receiver.");
-		return;
-	}
-
 	std::unique_ptr<CAN_IPC_CONFIG_T> can_ipc_port_config =
 		std::make_unique<CAN_IPC_CONFIG_T>(*can_ipc_config);
 	switch (can_ipc_config->can_dev_port) {

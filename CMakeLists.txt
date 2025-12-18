@@ -234,6 +234,33 @@ target_include_directories(can_ipc_layer
 
 add_compile_options(-${COMPILER_OPT_CONF})
 
+add_executable(can_ipc_socket_daemon
+    src/api/can_ipc_layer.cpp
+)
+
+target_include_directories(can_ipc_socket_daemon
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/core
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/api
+        ${HOBOT_CANHAL_INCLUDE_DIR}
+        ${HOBOT_IPCFHAL_INCLUDE_DIR}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/can_ipc_layer
+)
+
+target_link_libraries(can_ipc_socket_daemon
+    PRIVATE
+        can_ipc_layer
+        ${HOBOT_CANHAL_LIB}
+        ${HOBOT_IPCFHAL_LIB}
+)
+
+target_compile_options(can_ipc_socket_daemon PRIVATE -Wall -Wextra -Werror)
+
+set_target_properties(can_ipc_socket_daemon PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 target_include_directories(can_ipc_layer PUBLIC include/can_ipc_layer)
 
 target_link_libraries(can_ipc_layer PRIVATE ${HOBOT_CANHAL_LIB})

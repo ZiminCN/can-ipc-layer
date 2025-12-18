@@ -19,6 +19,18 @@
 
 #include <cstdint>
 
+static const char ipc_can_socket_server_path[] = "/tmp/ipc_can_layer/ipc_can.socket";
+
+#define SOCKET_MAGIC_CODE (0xDEADC0DE)
+
+enum class SOCKET_ORDER_E {
+	SOCKET_ORDER_AS_SEND = 0,
+	SOCKET_ORDER_AS_RECEIVE,
+	SOCKET_ORDER_AS_ADD_FILTER,
+	SOCKET_ORDER_AS_REMOVE_FILTER,
+	SOCKER_ORDER_AS_ACK,
+};
+
 /**
  * @brief CAN port enumeration
  * @note Select a CAN port from the S100 MCU expansion board
@@ -30,6 +42,12 @@ enum class CAN_PORT_E {
 	CAN_PORT_7,
 	CAN_PORT_8,
 	CAN_PORT_9,
+};
+
+enum class SOCKET_RETURN_ACK {
+	ACK_OKAY = 0,
+	ACK_ERROR,
+	ACK_UNKNOW,
 };
 
 /**
@@ -149,15 +167,36 @@ struct can_filter_t {
 	/** count of CAN identifier*/
 	uint32_t id_cnt;
 	/** User data to pass to callback function. */
-	void *user_data;
+	int socket_index;
+};
+
+/**
+ * Socket: AF_UNIX, SOCK_SEQPACKET
+ */
+struct SOCKET_PACKAGE_T {
+	// general package header
+	uint32_t socket_magic_code;  // refer to @SOCKET_MAGIC_CODE
+	SOCKET_ORDER_E socket_order; // refer to @SOCKET_ORDER_E
+	CAN_PORT_E can_port;
+
+	// for can package
+	can_frame_t can_frame;
+
+	// for can filter
+	uint32_t can_filter_id[32];
+	uint32_t can_filter_cnt;
+
+	// for return ack
+	SOCKET_RETURN_ACK socket_ack;
+	SOCKET_ORDER_E socket_ack_for_order;
 };
 
 /**
  * @brief Defines the application callback handler function signature for receiving.
  *
  * @param frame     Received frame.
- * @param user_data User data provided when the filter was added.
+ * @param socket_index socket client index.
  */
-typedef void (*can_rx_callback_t)(struct can_frame_t *frame, void *user_data);
+typedef void (*can_rx_callback_t)(struct can_frame_t *frame, int socket_index);
 
 #endif // __CAN_STRUCT_DEFINE_HPP__

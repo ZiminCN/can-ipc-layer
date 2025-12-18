@@ -25,11 +25,8 @@
 
 std::atomic<bool> stop_test_flag{false};
 
-void get_can_data_callback(struct can_frame_t *frame, void *user_data)
+void get_can_data_callback(struct can_frame_t *frame, int socket_index)
 {
-	(void)frame;
-	(void)user_data;
-
 	std::cout << "Trigger get_can_data_callback..." << std::endl;
 	std::cout << ">>>>>>>>>>>> Get CAN Data <<<<<<<<<<<<" << std::endl;
 
