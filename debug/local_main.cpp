@@ -38,43 +38,6 @@ bool cv_ready = false;
 SOCKET_RETURN_ACK ack_info;
 SOCKET_ORDER_E socket_ack_order;
 
-void get_can_data_callback(struct can_frame_t *frame, int socket_index)
-{
-	std::cout << "Trigger get_can_data_callback..." << std::endl;
-	std::cout << ">>>>>>>>>>>> Get CAN Data <<<<<<<<<<<<" << std::endl;
-
-	std::cout << "Get CAN ID: [" << std::hex << frame->id << "]." << std::endl;
-	std::cout << "Get CAN DLC: [" << static_cast<int>(frame->dlc) << "]." << std::endl;
-	std::cout << "Get CAN FLAGS: [" << static_cast<int>(frame->flags) << "]." << std::endl;
-
-	std::cout << "Get CAN Data: [";
-	for (int it = 0; it < can_dlc_to_bytes(frame->dlc); it++) {
-		std::cout << static_cast<int>(frame->data[it]) << " ";
-	}
-	std::cout << "]." << std::endl;
-
-	switch (frame->id) {
-	case 0x123: {
-		std::cout << "test 1" << std::endl;
-		break;
-	}
-	case 0x124: {
-		std::cout << "test 2" << std::endl;
-		break;
-	}
-	case 0x125: {
-		std::cout << "test 3" << std::endl;
-		break;
-	}
-	case 0x000: {
-		std::cout << "test 4" << std::endl;
-		break;
-	}
-	}
-
-	// stop_test_flag.store(true);
-}
-
 int temp_server_socket = -1;
 
 void connect_to_server()

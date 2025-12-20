@@ -33,7 +33,7 @@ void stop_test_thread()
 
 	while (1) {
 
-		if (stop_count > 60) {
+		if (stop_count > 180) {
 			ipc_socket_impl->stop();
 			break;
 		}
