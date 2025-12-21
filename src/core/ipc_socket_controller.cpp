@@ -130,16 +130,6 @@ bool IPC_SOCKET_CONTROLLER::start_controller()
 	signal(SIGTERM, IPC_SOCKET_CONTROLLER::signal_handler);
 
 	// start receiver
-	// //! test add a test filter
-	// uint32_t can_filter_id = 0x99;
-	// can_filter_t temp_filter = {};
-	// temp_filter.can_port = CAN_PORT_E::CAN_PORT_5;
-	// temp_filter.id = &can_filter_id;
-	// temp_filter.id_cnt = 1;
-	// temp_filter.socket_index = 1;
-	// this->direct_enable_can_receiver_port(CAN_PORT_E::CAN_PORT_5);
-	// this->direct_can_register_can_filter(temp_filter, this->socket_receive_callback);
-
 	this->direct_enable_can_receiver_port(CAN_PORT_E::CAN_PORT_5);
 	this->direct_start_can_ipc_receiver();
 
@@ -148,15 +138,19 @@ bool IPC_SOCKET_CONTROLLER::start_controller()
 	return true;
 }
 
+// TODO(zimin): add can port.
 void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame, int socket_index)
 {
+	std::shared_ptr<IPC_SOCKET_CONTROLLER> controller = IPC_SOCKET_CONTROLLER::getInstance();
 	LOG_DEBUG("Enter socket_receive_callback!");
 	SOCKET_PACKAGE_T socket_package = {};
 
 	int client_socket = static_cast<int>(socket_index);
-	if (client_socket == -1) {
-		LOG_ERROR("Error client socket: " << client_socket
-						  << " with can_frame id: " << frame->id);
+	// check client index is register in the client manager
+	auto client_manager =
+		controller->socket_client_manager->socket_client_index.find(client_socket);
+	if (client_manager == controller->socket_client_manager->socket_client_index.end()) {
+		return;
 	}
 
 	socket_package.socket_magic_code = SOCKET_MAGIC_CODE;
@@ -318,6 +312,9 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			temp_filter.id_cnt = socket_package.can_filter_cnt;
 			temp_filter.socket_index = client_socket;
 
+			// add socket client to manager
+			controller->client_manager_register(temp_filter);
+
 			int ret = controller->direct_can_register_can_filter(
 				temp_filter, controller->socket_receive_callback);
 			if (ret == 0) {
@@ -357,6 +354,9 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			temp_filter.id_cnt = socket_package.can_filter_cnt;
 			temp_filter.socket_index = client_socket;
 
+			// remove socket client to manager
+			controller->client_manager_deregister(temp_filter);
+
 			int ret = controller->direct_can_deregister_can_filter(temp_filter);
 			if (ret == 0) {
 				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
@@ -384,6 +384,8 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 		}
 	}
 
+	// clean socket client index
+	controller->clean_socket_client_index(client_socket);
 	close(client_socket);
 	LOG_INFO("IPC Socket: Client Disconnected.");
 }
@@ -399,6 +401,48 @@ void IPC_SOCKET_CONTROLLER::signal_handler(int sig)
 	unlink(controller->_run_socket_path.c_str()); // 清理套接字文件
 
 	exit(0);
+}
+
+void IPC_SOCKET_CONTROLLER::init_socket_client_manager()
+{
+	this->socket_client_manager->socket_client_index.clear();
+}
+
+void IPC_SOCKET_CONTROLLER::client_manager_register(can_filter_t can_filter)
+{
+	if (!this->socket_client_manager) {
+		LOG_ERROR("Error, Invalid can filter");
+		return;
+	}
+
+	auto &can_id_set =
+		this->socket_client_manager->socket_client_index[can_filter.socket_index];
+	for (uint32_t it = 0; it < can_filter.id_cnt; it++) {
+		can_id_set.insert(can_filter.id[it]);
+	}
+}
+
+void IPC_SOCKET_CONTROLLER::client_manager_deregister(can_filter_t can_filter)
+{
+	auto it = this->socket_client_manager->socket_client_index.find(can_filter.socket_index);
+	if (it == this->socket_client_manager->socket_client_index.end()) {
+		return;
+	}
+
+	auto &can_id_set =
+		this->socket_client_manager->socket_client_index[can_filter.socket_index];
+	for (uint32_t it = 0; it < can_filter.id_cnt; it++) {
+		can_id_set.erase(can_filter.id[it]);
+	}
+
+	if (can_id_set.empty()) {
+		this->clean_socket_client_index(can_filter.socket_index);
+	}
+}
+
+void IPC_SOCKET_CONTROLLER::clean_socket_client_index(int socket_index)
+{
+	this->socket_client_manager->socket_client_index.erase(socket_index);
 }
 
 }; // namespace socket_shell

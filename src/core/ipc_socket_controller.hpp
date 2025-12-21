@@ -23,8 +23,10 @@
 #include "ipc_socket_controller.hpp"
 #include "message_log.hpp"
 #include <cstring>
+#include <set>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <unordered_map>
 
 namespace ipc_can
 {
@@ -38,6 +40,7 @@ class IPC_SOCKET_CONTROLLER
 	IPC_SOCKET_CONTROLLER()
 	{
 		LOG_DEBUG("IPC_SOCKET_CONTROLLER impl init.");
+		this->init_socket_client_manager();
 		this->_is_running.store(true);
 	}
 	~IPC_SOCKET_CONTROLLER() = default;
@@ -78,6 +81,18 @@ class IPC_SOCKET_CONTROLLER
 	void direct_resume_can_ipc_receiver();
 
 	static void socket_receive_callback(struct can_frame_t *frame, int socket_index);
+
+	struct CAN_IPC_SOCKET_CLIENT_MANAGER_T {
+		// key: socket client index, value: can id vector
+		std::unordered_map<int, std::set<uint32_t>> socket_client_index;
+	};
+
+	inline static std::unique_ptr<CAN_IPC_SOCKET_CLIENT_MANAGER_T> socket_client_manager =
+		std::make_unique<CAN_IPC_SOCKET_CLIENT_MANAGER_T>();
+	void init_socket_client_manager();
+	void client_manager_register(can_filter_t can_filter);
+	void client_manager_deregister(can_filter_t can_filter);
+	void clean_socket_client_index(int socket_index);
 };
 
 }; // namespace socket_shell

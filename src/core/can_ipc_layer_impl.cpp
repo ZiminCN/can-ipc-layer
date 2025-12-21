@@ -52,7 +52,7 @@ bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 	// find where is the executable file path
 	if (!std::filesystem::exists(std::filesystem::current_path())) {
 		LOG_ERROR("Invaild execute path");
-		return false;
+		throw std::runtime_error("Invaild execute path");
 	}
 
 	LOG_DEBUG("Executable path: " << std::filesystem::current_path());
@@ -63,7 +63,7 @@ bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 	    !std::filesystem::exists(std::filesystem::current_path() / "config") &&
 	    !std::filesystem::is_directory(so_path)) {
 		LOG_ERROR("Can not find corrent Shared Object file");
-		return false;
+		throw std::runtime_error("Can not find corrent Shared Object file");
 	}
 
 	// copy config file data as soft link file to current elf path
