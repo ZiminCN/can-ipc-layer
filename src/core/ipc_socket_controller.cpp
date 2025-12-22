@@ -80,12 +80,6 @@ bool IPC_SOCKET_CONTROLLER::start_controller()
 		sizeof(this->_service_addr.sun_path) - 1);
 	this->_service_addr.sun_path[sizeof(this->_service_addr.sun_path) - 1] = '\0';
 
-	//! for test
-	{
-		LOG_DEBUG("this->_service_addr.sun_family is " << this->_service_addr.sun_family);
-		LOG_DEBUG("this->_service_addr.sun_path is " << this->_service_addr.sun_path);
-	}
-
 	// mkdir target dir path
 	size_t last_path_slash = this->_run_socket_path.find_last_of('/');
 	if (last_path_slash != std::string::npos) {
@@ -142,7 +136,6 @@ bool IPC_SOCKET_CONTROLLER::start_controller()
 void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame, int socket_index)
 {
 	std::shared_ptr<IPC_SOCKET_CONTROLLER> controller = IPC_SOCKET_CONTROLLER::getInstance();
-	LOG_DEBUG("Enter socket_receive_callback!");
 	SOCKET_PACKAGE_T socket_package = {};
 
 	int client_socket = static_cast<int>(socket_index);
@@ -150,6 +143,7 @@ void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame, i
 	auto client_manager =
 		controller->socket_client_manager->socket_client_index.find(client_socket);
 	if (client_manager == controller->socket_client_manager->socket_client_index.end()) {
+		LOG_DEBUG("target client index is disconnected.");
 		return;
 	}
 
@@ -291,8 +285,6 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 
 		switch (target_socket_order) {
 		case SOCKET_ORDER_E::SOCKET_ORDER_AS_SEND: {
-			LOG_DEBUG("Get SOCKET_ORDER_AS_SEND");
-
 			can_frame_t temp_can_frame = {};
 			std::memcpy(&temp_can_frame, &socket_package.can_frame,
 				    sizeof(can_frame_t));
@@ -301,8 +293,6 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			break;
 		}
 		case SOCKET_ORDER_E::SOCKET_ORDER_AS_ADD_FILTER: {
-			LOG_DEBUG("Get SOCKET_ORDER_AS_ADD_FILTER");
-
 			// stop receiver first
 			controller->direct_pause_can_ipc_receiver();
 
@@ -318,12 +308,12 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			int ret = controller->direct_can_register_can_filter(
 				temp_filter, controller->socket_receive_callback);
 			if (ret == 0) {
-				LOG_DEBUG("Add Filter success!");
+				LOG_INFO("Add Filter success!");
 				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_OKAY;
 				socket_package.socket_ack_for_order = target_socket_order;
 			} else {
-				LOG_DEBUG("Add Filter failed!");
+				LOG_WARNING("Add Filter failed!");
 				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_ERROR;
 				socket_package.socket_ack_for_order = target_socket_order;
@@ -331,21 +321,15 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 
 			if (write(client_socket, &socket_package, sizeof(socket_package)) !=
 			    sizeof(socket_package)) {
-				LOG_ERROR("Error write with ACK for add can filter");
-			} else {
-				LOG_DEBUG("Return SOCKET_ORDER_AS_ADD_FILTER ACK.");
+				LOG_WARNING("Error write with ACK for add can filter");
 			}
 
 			// start receiver
 			controller->direct_resume_can_ipc_receiver();
 
-			LOG_DEBUG("direct_start_can_ipc_receiver start!");
-
 			break;
 		}
 		case SOCKET_ORDER_E::SOCKET_ORDER_AS_REMOVE_FILTER: {
-			LOG_DEBUG("Get SOCKET_ORDER_AS_REMOVE_FILTER");
-
 			controller->direct_pause_can_ipc_receiver();
 
 			can_filter_t temp_filter = {};
@@ -359,10 +343,12 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 
 			int ret = controller->direct_can_deregister_can_filter(temp_filter);
 			if (ret == 0) {
+				LOG_INFO("Remove Filter success!");
 				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_OKAY;
 				socket_package.socket_ack_for_order = target_socket_order;
 			} else {
+				LOG_WARNING("Remove Filter failed!");
 				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_ERROR;
 				socket_package.socket_ack_for_order = target_socket_order;
@@ -370,7 +356,7 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 
 			if (write(client_socket, &socket_package, sizeof(socket_package)) !=
 			    sizeof(socket_package)) {
-				LOG_ERROR("Error write with ACK for remove can filter");
+				LOG_WARNING("Error write with ACK for remove can filter");
 			}
 
 			controller->direct_resume_can_ipc_receiver();
@@ -378,7 +364,7 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			break;
 		}
 		default: {
-			LOG_DEBUG("Invailed order.");
+			LOG_WARNING("Invailed order.");
 			break;
 		}
 		}
@@ -387,7 +373,7 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 	// clean socket client index
 	controller->clean_socket_client_index(client_socket);
 	close(client_socket);
-	LOG_INFO("IPC Socket: Client Disconnected.");
+	LOG_INFO("IPC Socket: Client[ " << static_cast<int>(client_socket) << " ] Disconnected.");
 }
 
 void IPC_SOCKET_CONTROLLER::signal_handler(int sig)

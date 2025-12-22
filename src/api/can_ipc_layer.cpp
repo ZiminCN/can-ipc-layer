@@ -38,8 +38,6 @@ void stop_test_thread()
 			break;
 		}
 
-		// LOG_DEBUG("stop idle...");
-
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		stop_count += 1;
 	}
@@ -64,10 +62,10 @@ int main()
 	std::shared_ptr<ipc_can::socket_shell::IPC_SOCKET_CONTROLLER> ipc_socket_impl =
 		ipc_can::socket_shell::IPC_SOCKET_CONTROLLER::getInstance();
 
-	std::thread stop(stop_test_thread);
+	// std::thread stop(stop_test_thread);
 	std::thread server(server_thread);
 
-	stop.detach();
+	// stop.detach();
 	server.join();
 
 	ipc_socket_impl->deinit_can_dev();

@@ -272,7 +272,7 @@ int main()
 		ns_last_epoch = ns_since_epoch;
 
 		std::cout << "时间戳: " << ns_since_epoch << std::endl;
-		std::cout << "间隔时间: " << diff_epoch / 1000 << "ns" << std::endl;
+		std::cout << "间隔时间: " << diff_epoch / 1000 << "us" << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
 		loop_cnt += 1;

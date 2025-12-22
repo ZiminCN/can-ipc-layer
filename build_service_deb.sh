@@ -14,6 +14,7 @@
 # limitations under the License.
 
 #!bin/bash
+VALUE_CAN_HAL_DEBUG_LEVEL=6
 
 if [ ! -d "build" ]; then
     echo "Build directory not found. Please build the project first."
@@ -78,21 +79,39 @@ fi
 
 cat > deb_build/DEBIAN/postinst << EOF
 #!/bin/bash
+if [ -f "/usr/lib/systemd/system/ipc_can_socket_server.service" ]; then
+    systemctl stop ipc_can_socket_server.service || true
+    systemctl disable ipc_can_socket_server.service || true
+    rm -f /usr/lib/systemd/system/ipc_can_socket_server.service
+    echo "clean old files"
+fi
+cp /usr/local/lib/can_ipc_layer/ipc_can_socket_server.service /usr/lib/systemd/system/
 # 更新动态库缓存
 ldconfig
+systemctl daemon-reload || true
+systemctl start ipc_can_socket_server.service || true
+systemctl enable ipc_can_socket_server.service || true
 EOF
 chmod +x deb_build/DEBIAN/postinst
 
 cat > deb_build/DEBIAN/prerm << EOF
 #!/bin/bash
 # 清理符号链接
+systemctl stop ipc_can_socket_server.service || true
+systemctl disable ipc_can_socket_server.service || true
+rm -f /usr/lib/systemd/system/ipc_can_socket_server.service
+rm -rf /usr/local/lib/can_ipc_layer/
+rm -rf /usr/local/include/can_ipc_layer/
 rmdir /usr/local/lib/can_ipc_layer/* 2>/dev/null || true
 rmdir /usr/local/include/can_ipc_layer/* 2>/dev/null || true
 ldconfig
+systemctl daemon-reload || true
 EOF
+
 chmod +x deb_build/DEBIAN/prerm
 
 cat > deb_build/usr/local/lib/can_ipc_layer/create_icp_can_socket_server.sh << EOF
+export CAN_HAL_DEBUG_LEVEL=$VALUE_CAN_HAL_DEBUG_LEVEL
 exec /usr/local/lib/can_ipc_layer/bin/can_ipc_socket_daemon
 EOF
 
@@ -125,6 +144,6 @@ chmod +x deb_build/usr/local/lib/can_ipc_layer/create_icp_can_socket_server.sh
 
 dpkg-deb --build deb_build ${DEB_PKG_NAME}_${DEB_PKG_VERSION}_arm64.deb
 
-# rm -rf deb_build
+rm -rf deb_build
 
 echo "DEB package ${DEB_PKG_NAME}_${DEB_PKG_VERSION}_arm64.deb created successfully."
