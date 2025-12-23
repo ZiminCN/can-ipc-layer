@@ -48,7 +48,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Local")
         )
 
         message(STATUS "库文件位置: ${TEST_CAN_IPC_LIB}")
-        add_executable(debug_can_ipc_layer local_main.cpp)
+        add_executable(debug_can_ipc_layer main.cpp)
         # 添加动态库头文件目录
         target_include_directories(debug_can_ipc_layer PRIVATE
                 ${CMAKE_SOURCE_DIR}/../include
@@ -60,6 +60,37 @@ if(CMAKE_BUILD_TYPE STREQUAL "Local")
         set_target_properties(debug_can_ipc_layer PROPERTIES
                 BUILD_RPATH "${CMAKE_SOURCE_DIR}/../build"
                 INSTALL_RPATH "${CMAKE_SOURCE_DIR}/../build"
+        )
+
+        target_compile_options(debug_can_ipc_layer PRIVATE -Werror)
+
+elseif(CMAKE_BUILD_TYPE STREQUAL "System")
+        # 查找System动态链接库
+        # System是动态库被部署到系统层/usr/层里面的产物
+        set(SYS_DYNAMIC_LIB_PATH "/usr/local/lib")
+        set(SYS_DYNAMIC_HEADER_PATH "/usr/local/include")
+        set(CAN_IPC_LAYER_NAME "can_ipc_layer")
+
+        find_library(TEST_CAN_IPC_LIB can_ipc_layer
+                NAMES can_ipc_layer libcan_ipc_layer.so
+                PATHS ${SYS_DYNAMIC_LIB_PATH}/${CAN_IPC_LAYER_NAME}
+                REQUIRED
+        )
+
+        message(STATUS "库文件位置: ${TEST_CAN_IPC_LIB}")
+        add_executable(debug_can_ipc_layer main.cpp)
+        # 添加动态库头文件目录
+        target_include_directories(debug_can_ipc_layer PRIVATE
+                ${SYS_DYNAMIC_HEADER_PATH}/${CAN_IPC_LAYER_NAME}
+        )
+
+        # 链接动态库
+        target_link_libraries(debug_can_ipc_layer ${TEST_CAN_IPC_LIB})
+
+        # 设置运行时库搜索路径（避免每次设置LD_LIBRARY_PATH）
+        set_target_properties(debug_can_ipc_layer PROPERTIES
+                BUILD_RPATH ${SYS_DYNAMIC_LIB_PATH}/${CAN_IPC_LAYER_NAME}
+                INSTALL_RPATH ${SYS_DYNAMIC_LIB_PATH}/${CAN_IPC_LAYER_NAME}
         )
 
         target_compile_options(debug_can_ipc_layer PRIVATE -Werror)

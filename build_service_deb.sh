@@ -57,8 +57,9 @@ cp -r "$BIN_DIR" deb_build/usr/local/lib/can_ipc_layer/
 
 cd deb_build/usr/local/lib/can_ipc_layer
 LIB_BASENAME=$(basename "$LIB_FILE")
-ln -s "$LIB_BASENAME" "libcan_ipc_layer.so.0"
-ln -s "libcan_ipc_layer.so.0" "libcan_ipc_layer.so"
+MAJOR_VERSION=$(echo "$LIB_BASENAME" | sed 's/libcan_ipc_layer\.so\.\([0-9]\+\)\..*/\1/')
+ln -s "$LIB_BASENAME" "libcan_ipc_layer.so.$MAJOR_VERSION"
+ln -s "libcan_ipc_layer.so.$MAJOR_VERSION" "libcan_ipc_layer.so"
 cd - > /dev/null
 
 cat > deb_build/DEBIAN/control << EOF
@@ -80,13 +81,14 @@ fi
 cat > deb_build/DEBIAN/postinst << EOF
 #!/bin/bash
 if [ -f "/usr/lib/systemd/system/ipc_can_socket_server.service" ]; then
-    systemctl stop ipc_can_socket_server.service || true
-    systemctl disable ipc_can_socket_server.service || true
-    rm -f /usr/lib/systemd/system/ipc_can_socket_server.service
+    systemctl stop ipc_can_socket_server.service
+    systemctl disable ipc_can_socket_server.service
+    # rm -f /usr/lib/systemd/system/ipc_can_socket_server.service
     echo "clean old files"
 fi
 cp /usr/local/lib/can_ipc_layer/ipc_can_socket_server.service /usr/lib/systemd/system/
 # 更新动态库缓存
+echo "/usr/local/lib/can_ipc_layer" > /etc/ld.so.conf.d/can_ipc_layer.conf
 ldconfig
 systemctl daemon-reload || true
 systemctl start ipc_can_socket_server.service || true
@@ -100,6 +102,7 @@ cat > deb_build/DEBIAN/prerm << EOF
 systemctl stop ipc_can_socket_server.service || true
 systemctl disable ipc_can_socket_server.service || true
 rm -f /usr/lib/systemd/system/ipc_can_socket_server.service
+rm -f /etc/ld.so.conf.d/can_ipc_layer.conf
 rm -rf /usr/local/lib/can_ipc_layer/
 rm -rf /usr/local/include/can_ipc_layer/
 rmdir /usr/local/lib/can_ipc_layer/* 2>/dev/null || true
@@ -128,7 +131,10 @@ User=sunrise
 WorkingDirectory=/usr/local/lib/can_ipc_layer/
 ExecStart=/bin/bash /usr/local/lib/can_ipc_layer/create_icp_can_socket_server.sh
 Restart=on-failure
-RestartSec=5
+RestartSec=30
+TimeoutStopSec=3
+KillMode=process
+SendSIGKILL=yes
 
 # 日志配置（可选但推荐）
 StandardOutput=journal
