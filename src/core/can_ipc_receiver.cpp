@@ -116,13 +116,8 @@ int CAN_IPC_RECEIVER::register_can_filter(const CAN_IPC_FILTER_T &can_ipc_filter
 	}
 
 	for (uint32_t it = 0; it < can_ipc_filter.can_filter_id_cnt; it++) {
-		auto filter_result = can_ipc_receiver_filter->can_ipc_filter_map.emplace(
+		can_ipc_receiver_filter->can_ipc_filter_map.emplace(
 			can_ipc_filter.can_filter_id[it], can_ipc_filter);
-		if (filter_result.second == false) {
-			LOG_WARNING("Add CAN Filter failed, the Filter CAN ID: ["
-				    << static_cast<uint32_t>(can_ipc_filter.can_filter_id[it])
-				    << "] is already exist.");
-		}
 	}
 
 	for (uint32_t it = 0; it < can_ipc_filter.can_filter_id_cnt; it++) {
