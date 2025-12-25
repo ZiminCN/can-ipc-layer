@@ -115,7 +115,6 @@ void socket_add_can_filter()
 
 	{
 		std::unique_lock<std::mutex> lock(cmtx);
-		std::cout << "Test point!" << std::endl;
 		cv.wait(lock, [] { return cv_ready; });
 	}
 
@@ -154,21 +153,23 @@ void socket_remove_can_filter()
 		std::cout << "Clite Write [socket_remove_can_filter] Error!" << std::endl;
 	}
 
-	ssize_t bytes_read = read(temp_server_socket, &socket_package, sizeof(socket_package));
-	if (bytes_read == -1) {
-		throw std::runtime_error(
-			"[socket_remove_can_filter] socket client connection break!");
+	std::cout << "Wait for socket_remove_can_filter Ack!" << std::endl;
+
+	{
+		std::unique_lock<std::mutex> lock(cmtx);
+		cv.wait(lock, [] { return cv_ready; });
 	}
 
-	std::cout << "bytes_read is " << bytes_read << std::endl;
-	if (socket_package.socket_magic_code != SOCKET_MAGIC_CODE) {
-		std::cout << "Read a invalied data." << std::endl;
-	}
+	std::cout << "Get socket_remove_can_filter Ack!" << std::endl;
 
-	if (socket_package.socket_order == SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK) {
-		std::cout << "Get Ack: [" << static_cast<int>(socket_package.socket_ack)
-			  << "] for Order: ["
-			  << static_cast<int>(socket_package.socket_ack_for_order) << "]"
+	{
+		std::unique_lock<std::mutex> lock(cmtx);
+		cv_ready = false;
+		if (socket_ack_order != SOCKET_ORDER_E::SOCKET_ORDER_AS_REMOVE_FILTER) {
+			std::cout << "Get a error Ack order." << std::endl;
+		}
+
+		std::cout << "socket_remove_can_filter ack is: " << static_cast<int>(ack_info)
 			  << std::endl;
 	}
 }
@@ -210,7 +211,7 @@ void receive_thread()
 
 			break;
 		}
-		case SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK: {
+		case SOCKET_ORDER_E::SOCKET_ORDER_AS_ACK: {
 			std::cout << "[receive_thread] Get Ack!" << std::endl;
 
 			{
@@ -252,7 +253,7 @@ int main()
 	socket_add_can_filter();
 
 	while (loop_flag) {
-		if (loop_cnt >= 60) {
+		if (loop_cnt >= 3) {
 			loop_flag = false;
 		}
 
@@ -277,6 +278,8 @@ int main()
 
 		loop_cnt += 1;
 	}
+
+	socket_remove_can_filter();
 
 	return 0;
 }

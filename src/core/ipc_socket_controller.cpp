@@ -309,12 +309,12 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 				temp_filter, controller->socket_receive_callback);
 			if (ret == 0) {
 				LOG_INFO("Add Filter success!");
-				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
+				socket_package.socket_order = SOCKET_ORDER_E::SOCKET_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_OKAY;
 				socket_package.socket_ack_for_order = target_socket_order;
 			} else {
 				LOG_WARNING("Add Filter failed!");
-				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
+				socket_package.socket_order = SOCKET_ORDER_E::SOCKET_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_ERROR;
 				socket_package.socket_ack_for_order = target_socket_order;
 			}
@@ -344,12 +344,12 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			int ret = controller->direct_can_deregister_can_filter(temp_filter);
 			if (ret == 0) {
 				LOG_INFO("Remove Filter success!");
-				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
+				socket_package.socket_order = SOCKET_ORDER_E::SOCKET_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_OKAY;
 				socket_package.socket_ack_for_order = target_socket_order;
 			} else {
 				LOG_WARNING("Remove Filter failed!");
-				socket_package.socket_order = SOCKET_ORDER_E::SOCKER_ORDER_AS_ACK;
+				socket_package.socket_order = SOCKET_ORDER_E::SOCKET_ORDER_AS_ACK;
 				socket_package.socket_ack = SOCKET_RETURN_ACK::ACK_ERROR;
 				socket_package.socket_ack_for_order = target_socket_order;
 			}
