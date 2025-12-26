@@ -80,19 +80,22 @@ class IPC_SOCKET_CONTROLLER
 	void direct_pause_can_ipc_receiver();
 	void direct_resume_can_ipc_receiver();
 
-	static void socket_receive_callback(struct can_frame_t *frame, int socket_index);
+	static void socket_receive_callback(struct can_frame_t *frame);
 
 	struct CAN_IPC_SOCKET_CLIENT_MANAGER_T {
 		// key: socket client index, value: can id vector
 		std::unordered_map<int, std::set<uint32_t>> socket_client_index;
+		// reverse-hash: key: can id, value: socket client index
+		std::unordered_map<uint32_t, std::set<int>> socket_client_reverse_index;
 	};
 
 	inline static std::unique_ptr<CAN_IPC_SOCKET_CLIENT_MANAGER_T> socket_client_manager =
 		std::make_unique<CAN_IPC_SOCKET_CLIENT_MANAGER_T>();
 	void init_socket_client_manager();
-	void client_manager_register(can_filter_t can_filter);
-	void client_manager_deregister(can_filter_t can_filter);
-	void clean_socket_client_index(int socket_index);
+	void client_manager_register(can_filter_t can_filter, int client_index);
+	void client_manager_deregister(can_filter_t can_filter, int client_index);
+	void update_socket_client_reserve_index();
+	void clean_socket_client_index(int client_index);
 };
 
 }; // namespace socket_shell

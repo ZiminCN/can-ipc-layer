@@ -72,12 +72,13 @@ bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 			// check target path exists config/ file
 			if (std::filesystem::exists(std::filesystem::current_path() / "config")) {
 				LOG_WARNING("[Warning]: An existing IPC CAN configuration link "
-					     "already exists. ");
+					    "already exists. ");
 				LOG_WARNING("[Warning]: You can manually delete it to ensure that "
-					     "the latest configuration link is automatically "
-					     "overwritten.");
+					    "the latest configuration link is automatically "
+					    "overwritten.");
 			} else {
-				LOG_INFO("get ipc can config and copy to [" << std::filesystem::current_path() << "]");
+				LOG_INFO("get ipc can config and copy to ["
+					 << std::filesystem::current_path() << "]");
 				std::filesystem::create_directory_symlink(
 					so_path, std::filesystem::current_path() / "config");
 			}
@@ -190,7 +191,6 @@ int CAN_IPC_LAYER_IMPL::lib_can_register_can_filter(const can_filter_t &can_filt
 		.can_filter_id = can_filter.id,
 		.can_filter_id_cnt = can_filter.id_cnt,
 		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
-		.socket_index = can_filter.socket_index,
 		.can_filter_callback = can_rx_callback,
 	};
 	return this->can_ipc_receiver_handle->register_can_filter(can_ipc_receiver_filter);
@@ -202,7 +202,6 @@ int CAN_IPC_LAYER_IMPL::lib_can_deregister_can_filter(const can_filter_t &can_fi
 		.can_filter_id = can_filter.id,
 		.can_filter_id_cnt = can_filter.id_cnt,
 		.can_port = this->lib_get_can_dev_port(can_filter.can_port),
-		.socket_index = can_filter.socket_index,
 		.can_filter_callback = NULL,
 	};
 	return this->can_ipc_receiver_handle->deregister_can_filter(can_ipc_receiver_filter);

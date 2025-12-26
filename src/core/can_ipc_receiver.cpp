@@ -203,7 +203,7 @@ int CAN_IPC_RECEIVER::match_can_filter(CAN_DEV_PORT_E can_port,
 
 		std::function<void()> cb_func = [filter, raw_can_frame]() {
 			can_frame_t cb_frame = raw_can_frame;
-			filter.can_filter_callback(&cb_frame, filter.socket_index);
+			filter.can_filter_callback(&cb_frame);
 		};
 
 		this->work_queue_handle->enqueue(cb_func);

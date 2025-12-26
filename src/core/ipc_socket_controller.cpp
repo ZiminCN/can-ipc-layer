@@ -133,50 +133,39 @@ bool IPC_SOCKET_CONTROLLER::start_controller()
 }
 
 // TODO(zimin): add can port.
-void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame, int socket_index)
+void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame)
 {
 	std::shared_ptr<IPC_SOCKET_CONTROLLER> controller = IPC_SOCKET_CONTROLLER::getInstance();
-	SOCKET_PACKAGE_T socket_package = {};
 
-	int client_socket = static_cast<int>(socket_index);
 	// check client index is register in the client manager
-	auto client_manager =
-		controller->socket_client_manager->socket_client_index.find(client_socket);
+	auto client_manager_it =
+		controller->socket_client_manager->socket_client_reverse_index.find(frame->id);
 
-	LOG_DEBUG("SOcket Client Manager Contents:");
-	if (controller->socket_client_manager->socket_client_index.empty()) {
-		LOG_DEBUG("socket_client_index (Empty)");
+	if (client_manager_it ==
+	    controller->socket_client_manager->socket_client_reverse_index.end()) {
+		LOG_DEBUG("socket_receive_callback have no this can id: " << frame->id);
 		return;
 	}
 
-	for (const auto& [client_index, can_ids] : controller->socket_client_manager->socket_client_index) {
-		LOG_DEBUG("Client Index: " << client_index);
-		LOG_DEBUG("	CAN IDs (" << can_ids.size() << "): ");
-		
-		if (can_ids.empty()) {
-			LOG_DEBUG("(None)");
-		} else {
-		for (const auto& id : can_ids) {
-			std::cout << "0x" << std::hex << id << std::dec << " ";
-		}
-		std::cout << std::endl;
-		}
-		std::cout << std::endl;
-    	}
-
-	if (client_manager == controller->socket_client_manager->socket_client_index.end()) {
-		LOG_DEBUG("target client index is disconnected.");
-		return;
-	}
-
+	SOCKET_PACKAGE_T socket_package = {};
 	socket_package.socket_magic_code = SOCKET_MAGIC_CODE;
 	socket_package.socket_order = SOCKET_ORDER_E::SOCKET_ORDER_AS_RECEIVE;
-
 	std::memcpy(&socket_package.can_frame, frame, sizeof(can_frame_t));
+
 	LOG_DEBUG("Receive Callback Order");
-	if (write(client_socket, &socket_package, sizeof(socket_package)) !=
-	    sizeof(socket_package)) {
-		LOG_ERROR("Error write: " << client_socket << "with can_frame id: " << frame->id);
+
+	for (auto socket_client_index : client_manager_it->second) {
+
+		if (socket_client_index < 0) {
+			LOG_WARNING("Invalid client index: " << socket_client_index);
+			continue;
+		}
+
+		if (write(socket_client_index, &socket_package, sizeof(socket_package)) !=
+		    sizeof(socket_package)) {
+			LOG_ERROR("Error write: " << socket_client_index
+						  << "with can_frame id: " << frame->id);
+		}
 	}
 }
 
@@ -311,7 +300,6 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 				    sizeof(can_frame_t));
 
 			controller->direct_can_send(target_can_port, temp_can_frame);
-			LOG_DEBUG("Send Order");
 			break;
 		}
 		case SOCKET_ORDER_E::SOCKET_ORDER_AS_ADD_FILTER: {
@@ -322,10 +310,9 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			temp_filter.can_port = socket_package.can_port;
 			temp_filter.id = socket_package.can_filter_id;
 			temp_filter.id_cnt = socket_package.can_filter_cnt;
-			temp_filter.socket_index = client_socket;
 
 			// add socket client to manager
-			controller->client_manager_register(temp_filter);
+			controller->client_manager_register(temp_filter, client_socket);
 
 			int ret = controller->direct_can_register_can_filter(
 				temp_filter, controller->socket_receive_callback);
@@ -358,10 +345,9 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			temp_filter.can_port = socket_package.can_port;
 			temp_filter.id = socket_package.can_filter_id;
 			temp_filter.id_cnt = socket_package.can_filter_cnt;
-			temp_filter.socket_index = client_socket;
 
 			// remove socket client to manager
-			controller->client_manager_deregister(temp_filter);
+			controller->client_manager_deregister(temp_filter, client_socket);
 
 			int ret = controller->direct_can_deregister_can_filter(temp_filter);
 			if (ret == 0) {
@@ -414,43 +400,64 @@ void IPC_SOCKET_CONTROLLER::signal_handler(int sig)
 void IPC_SOCKET_CONTROLLER::init_socket_client_manager()
 {
 	this->socket_client_manager->socket_client_index.clear();
+	this->socket_client_manager->socket_client_reverse_index.clear();
 }
 
-void IPC_SOCKET_CONTROLLER::client_manager_register(can_filter_t can_filter)
+void IPC_SOCKET_CONTROLLER::client_manager_register(can_filter_t can_filter, int client_index)
 {
 	if (!this->socket_client_manager) {
 		LOG_ERROR("Error, Invalid can filter");
 		return;
 	}
 
-	auto &can_id_set =
-		this->socket_client_manager->socket_client_index[can_filter.socket_index];
-	for (uint32_t it = 0; it < can_filter.id_cnt; it++) {
+	auto &can_id_set = this->socket_client_manager->socket_client_index[client_index];
+	for (uint32_t it = 0; it < can_filter.id_cnt; ++it) {
 		can_id_set.insert(can_filter.id[it]);
 	}
+
+	update_socket_client_reserve_index();
 }
 
-void IPC_SOCKET_CONTROLLER::client_manager_deregister(can_filter_t can_filter)
+void IPC_SOCKET_CONTROLLER::client_manager_deregister(can_filter_t can_filter, int client_index)
 {
-	auto it = this->socket_client_manager->socket_client_index.find(can_filter.socket_index);
+	auto it = this->socket_client_manager->socket_client_index.find(client_index);
 	if (it == this->socket_client_manager->socket_client_index.end()) {
 		return;
 	}
 
-	auto &can_id_set =
-		this->socket_client_manager->socket_client_index[can_filter.socket_index];
-	for (uint32_t it = 0; it < can_filter.id_cnt; it++) {
-		can_id_set.erase(can_filter.id[it]);
+	auto &can_id_set = this->socket_client_manager->socket_client_index[client_index];
+	for (uint32_t i = 0; i < can_filter.id_cnt; i++) {
+		can_id_set.erase(can_filter.id[i]);
 	}
 
 	if (can_id_set.empty()) {
-		this->clean_socket_client_index(can_filter.socket_index);
+		this->clean_socket_client_index(client_index);
+	}
+
+	update_socket_client_reserve_index();
+}
+
+void IPC_SOCKET_CONTROLLER::update_socket_client_reserve_index()
+{
+	this->socket_client_manager->socket_client_reverse_index.clear();
+
+	for (auto it = this->socket_client_manager->socket_client_index.begin();
+	     it != this->socket_client_manager->socket_client_index.end(); ++it) {
+		int socket_client_index = it->first;
+		const std::set<uint32_t> &can_ids = it->second;
+
+		for (auto can_ids_it = can_ids.begin(); can_ids_it != can_ids.end(); ++can_ids_it) {
+			auto &socket_client_index_set =
+				this->socket_client_manager
+					->socket_client_reverse_index[*can_ids_it];
+			socket_client_index_set.insert(socket_client_index);
+		}
 	}
 }
 
-void IPC_SOCKET_CONTROLLER::clean_socket_client_index(int socket_index)
+void IPC_SOCKET_CONTROLLER::clean_socket_client_index(int client_index)
 {
-	this->socket_client_manager->socket_client_index.erase(socket_index);
+	this->socket_client_manager->socket_client_index.erase(client_index);
 }
 
 }; // namespace socket_shell

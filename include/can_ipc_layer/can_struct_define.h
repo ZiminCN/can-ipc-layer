@@ -166,8 +166,6 @@ struct can_filter_t {
 	uint32_t *id;
 	/** count of CAN identifier*/
 	uint32_t id_cnt;
-	/** User data to pass to callback function. */
-	int socket_index;
 };
 
 /**
@@ -195,8 +193,7 @@ struct SOCKET_PACKAGE_T {
  * @brief Defines the application callback handler function signature for receiving.
  *
  * @param frame     Received frame.
- * @param socket_index socket client index.
  */
-typedef void (*can_rx_callback_t)(struct can_frame_t *frame, int socket_index);
+typedef void (*can_rx_callback_t)(struct can_frame_t *frame);
 
 #endif // __CAN_STRUCT_DEFINE_HPP__
