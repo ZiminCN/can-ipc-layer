@@ -71,16 +71,13 @@ bool CAN_IPC_LAYER_IMPL::copy_ipc_config_data()
 		try {
 			// check target path exists config/ file
 			if (std::filesystem::exists(std::filesystem::current_path() / "config")) {
-				std::cerr << "[Warning]: An existing IPC CAN configuration link "
-					     "already exists. "
-					  << std::endl;
-				std::cerr << "[Warning]: You can manually delete it to ensure that "
+				LOG_WARNING("[Warning]: An existing IPC CAN configuration link "
+					     "already exists. ");
+				LOG_WARNING("[Warning]: You can manually delete it to ensure that "
 					     "the latest configuration link is automatically "
-					     "overwritten."
-					  << std::endl;
+					     "overwritten.");
 			} else {
-				std::cout << "get ipc can config and copy to ["
-					  << std::filesystem::current_path() << "]" << std::endl;
+				LOG_INFO("get ipc can config and copy to [" << std::filesystem::current_path() << "]");
 				std::filesystem::create_directory_symlink(
 					so_path, std::filesystem::current_path() / "config");
 			}

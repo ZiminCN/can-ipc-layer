@@ -142,6 +142,28 @@ void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame, i
 	// check client index is register in the client manager
 	auto client_manager =
 		controller->socket_client_manager->socket_client_index.find(client_socket);
+
+	LOG_DEBUG("SOcket Client Manager Contents:");
+	if (controller->socket_client_manager->socket_client_index.empty()) {
+		LOG_DEBUG("socket_client_index (Empty)");
+		return;
+	}
+
+	for (const auto& [client_index, can_ids] : controller->socket_client_manager->socket_client_index) {
+		LOG_DEBUG("Client Index: " << client_index);
+		LOG_DEBUG("	CAN IDs (" << can_ids.size() << "): ");
+		
+		if (can_ids.empty()) {
+			LOG_DEBUG("(None)");
+		} else {
+		for (const auto& id : can_ids) {
+			std::cout << "0x" << std::hex << id << std::dec << " ";
+		}
+		std::cout << std::endl;
+		}
+		std::cout << std::endl;
+    	}
+
 	if (client_manager == controller->socket_client_manager->socket_client_index.end()) {
 		LOG_DEBUG("target client index is disconnected.");
 		return;
@@ -151,11 +173,10 @@ void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame, i
 	socket_package.socket_order = SOCKET_ORDER_E::SOCKET_ORDER_AS_RECEIVE;
 
 	std::memcpy(&socket_package.can_frame, frame, sizeof(can_frame_t));
-
+	LOG_DEBUG("Receive Callback Order");
 	if (write(client_socket, &socket_package, sizeof(socket_package)) !=
 	    sizeof(socket_package)) {
-		std::cout << "Error write: " << client_socket << "with can_frame id: " << frame->id
-			  << std::endl;
+		LOG_ERROR("Error write: " << client_socket << "with can_frame id: " << frame->id);
 	}
 }
 
@@ -290,6 +311,7 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 				    sizeof(can_frame_t));
 
 			controller->direct_can_send(target_can_port, temp_can_frame);
+			LOG_DEBUG("Send Order");
 			break;
 		}
 		case SOCKET_ORDER_E::SOCKET_ORDER_AS_ADD_FILTER: {
@@ -326,7 +348,7 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 
 			// start receiver
 			controller->direct_resume_can_ipc_receiver();
-
+			LOG_DEBUG("Add Filter Order");
 			break;
 		}
 		case SOCKET_ORDER_E::SOCKET_ORDER_AS_REMOVE_FILTER: {
@@ -360,7 +382,7 @@ void IPC_SOCKET_CONTROLLER::handle_client(int client_socket)
 			}
 
 			controller->direct_resume_can_ipc_receiver();
-
+			LOG_DEBUG("Remove Filter Order");
 			break;
 		}
 		default: {

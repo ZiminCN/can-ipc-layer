@@ -76,10 +76,10 @@ void socket_send_can_data()
 	socket_package.can_port = CAN_PORT_E::CAN_PORT_5;
 
 	can_frame_t can_frame = {};
-	can_frame.id = 0x200;
+	can_frame.id = 0x2FF;
 	can_frame.dlc = can_bytes_to_dlc(64);
 	can_frame.flags = CAN_MODE_FD;
-	std::memset(&can_frame.data, 0x1B, can_dlc_to_bytes(can_frame.dlc));
+	std::memset(&can_frame.data, 0x3B, can_dlc_to_bytes(can_frame.dlc));
 
 	socket_package.can_frame = can_frame;
 

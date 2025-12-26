@@ -154,6 +154,7 @@ int CAN_IPC_RECEIVER::deregister_can_filter(const CAN_IPC_FILTER_T &can_ipc_filt
 	CAN_IPC_RECEIVER_FILTER_T *can_ipc_receiver_filter = this->return_can_ipc_receiver_filter(
 		static_cast<CAN_DEV_PORT_E>(can_ipc_filter.can_port));
 	if (can_ipc_receiver_filter == nullptr) {
+		LOG_ERROR("can_ipc_receiver_filter is null.");
 		return -RET_CODE_INVALID_ARG;
 	}
 
@@ -177,8 +178,6 @@ int CAN_IPC_RECEIVER::deregister_can_filter(const CAN_IPC_FILTER_T &can_ipc_filt
 				LOG_DEBUG("Erase CAN Filter with CAN id: " << static_cast<uint32_t>(
 						  can_ipc_filter.can_filter_id[it]));
 			}
-		} else {
-			return -RET_CODE_INVALID_ARG;
 		}
 	}
 
@@ -278,11 +277,6 @@ void CAN_IPC_RECEIVER::get_raw_can_data(const can_port_target_t &can_port_target
 void CAN_IPC_RECEIVER::work_queue_task()
 {
 	while (this->work_task_queue_running_.load()) {
-
-		//! for test
-		LOG_DEBUG("Current work queue task count: ["
-			  << static_cast<int>(this->work_queue_handle->size()) << "].");
-
 		// set the scope for the mutex lock
 		{
 			std::unique_lock<std::mutex> lock(this->work_task_queue_paused_mutex_);
@@ -302,8 +296,6 @@ void CAN_IPC_RECEIVER::work_queue_task()
 										      << "].");
 			}
 		}
-
-		// std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
 
