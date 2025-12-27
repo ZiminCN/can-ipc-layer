@@ -1,10 +1,10 @@
 #pragma once
 
 // Auto-generated version information from Git and CMake Presets
-#define MAJOR_VERSION 0
+#define MAJOR_VERSION 1
 #define MINOR_VERSION 0
-#define PATCH_VERSION 5
-#define TWEAK_VERSION 29
-#define HASH_VERSION  "7938165"
+#define PATCH_VERSION 6
+#define TWEAK_VERSION 30
+#define HASH_VERSION  "d6bab93"
 
-#define FULL_VERSION "0.0.5.29.7938165"
+#define FULL_VERSION "1.0.6.30.d6bab93"

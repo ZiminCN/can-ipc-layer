@@ -152,8 +152,6 @@ void IPC_SOCKET_CONTROLLER::socket_receive_callback(struct can_frame_t *frame)
 	socket_package.socket_order = SOCKET_ORDER_E::SOCKET_ORDER_AS_RECEIVE;
 	std::memcpy(&socket_package.can_frame, frame, sizeof(can_frame_t));
 
-	LOG_DEBUG("Receive Callback Order");
-
 	for (auto socket_client_index : client_manager_it->second) {
 
 		if (socket_client_index < 0) {
